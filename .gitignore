@@ -40,9 +40,9 @@ conda-meta/
 logs/
 
 # Datasets
-datasets/
-data/
-dataset/
+/datasets/
+/data/
+/dataset/
 third_party/CoOp/data/
 third_party/CoOp/datasets/
 
@@ -73,3 +73,21 @@ third_party/CoOp/logs/
 
 # CoOp_clean outputs
 third_party/CoOp_clean/output/
+
+# CoOp_clean dataset loader source files
+# Track Python dataset loaders, but ignore backups/caches.
+third_party/CoOp_clean/datasets/**
+!third_party/CoOp_clean/datasets/
+!third_party/CoOp_clean/datasets/**/
+!third_party/CoOp_clean/datasets/*.py
+!third_party/CoOp_clean/datasets/**/*.py
+
+# Ignore backup/cache files inside CoOp_clean dataset loaders
+third_party/CoOp_clean/datasets/**/*.bak
+third_party/CoOp_clean/datasets/**/*.bak*
+third_party/CoOp_clean/datasets/**/*bak*.py
+third_party/CoOp_clean/datasets/**/*backup*.py
+third_party/CoOp_clean/datasets/**/*~
+third_party/CoOp_clean/datasets/**/*.orig
+third_party/CoOp_clean/datasets/**/__pycache__/
+third_party/CoOp_clean/datasets/**/*.pyc
