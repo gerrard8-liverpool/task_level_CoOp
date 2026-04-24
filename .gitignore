@@ -1,0 +1,75 @@
+__pycache__/
+*.pyc
+.idea/
+.venv/
+logs/
+outputs/
+checkpoints/
+# Local backup folders
+backup_*/
+*_backup_*/
+backup*/
+
+# Archives
+*.tar
+*.tar.gz
+*.zip
+*.rar
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# Environment
+.env
+.venv/
+venv/
+conda-meta/
+
+# Logs
+*.log
+logs/
+
+# Datasets
+datasets/
+data/
+dataset/
+third_party/CoOp/data/
+third_party/CoOp/datasets/
+
+# Training outputs
+output/
+outputs/
+results/
+grid_results/
+summary_raw/
+checkpoints/
+weights/
+runs/
+wandb/
+tensorboard/
+*.pth
+*.pt
+*.ckpt
+*.pkl
+*.npy
+*.npz
+
+# CoOp outputs
+third_party/CoOp/output/
+third_party/CoOp/outputs/
+third_party/CoOp/grid_results/
+third_party/CoOp/checkpoints/
+third_party/CoOp/logs/
+
+# CoOp_clean outputs
+third_party/CoOp_clean/output/
