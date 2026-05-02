@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 
 import torch
@@ -197,7 +198,17 @@ class CustomCLIP(nn.Module):
 
         prompts = self.prompt_learner()
         tokenized_prompts = self.tokenized_prompts
-        text_features = self.text_encoder(prompts, tokenized_prompts)
+        text_batch_size = int(os.environ.get("TEXT_BATCH_SIZE", "0"))
+        if text_batch_size > 0 and prompts.shape[0] > text_batch_size:
+            text_features_list = []
+            for start in range(0, prompts.shape[0], text_batch_size):
+                end = start + text_batch_size
+                text_features_list.append(
+                    self.text_encoder(prompts[start:end], tokenized_prompts[start:end])
+                )
+            text_features = torch.cat(text_features_list, dim=0)
+        else:
+            text_features = self.text_encoder(prompts, tokenized_prompts)
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)

@@ -36,16 +36,34 @@ class SUN397(DatasetBase):
             OxfordPets.save_split(train, val, test, self.split_path, self.image_dir)
 
         num_shots = cfg.DATASET.NUM_SHOTS
+        use_b = bool(getattr(cfg.TRAINER.COOP, "USE_B", False))
+
         if num_shots >= 1:
             seed = cfg.SEED
-            preprocessed = os.path.join(self.split_fewshot_dir, f"shot_{num_shots}-seed_{seed}.pkl")
-            
+
+            if use_b:
+                preprocessed = os.path.join(
+                    self.split_fewshot_dir,
+                    f"shot_{num_shots}-seed_{seed}-slotproto.pkl"
+                )
+            else:
+                preprocessed = os.path.join(
+                    self.split_fewshot_dir,
+                    f"shot_{num_shots}-seed_{seed}.pkl"
+                )
+
             if os.path.exists(preprocessed):
                 print(f"Loading preprocessed few-shot data from {preprocessed}")
                 with open(preprocessed, "rb") as file:
                     data = pickle.load(file)
                     train, val = data["train"], data["val"]
             else:
+                if use_b:
+                    raise FileNotFoundError(
+                        f"Missing slot-annotated few-shot cache: {preprocessed}. "
+                        f"Please run offline slot preprocessing first."
+                    )
+
                 train = self.generate_fewshot_dataset(train, num_shots=num_shots)
                 val = self.generate_fewshot_dataset(val, num_shots=min(num_shots, 4))
                 data = {"train": train, "val": val}

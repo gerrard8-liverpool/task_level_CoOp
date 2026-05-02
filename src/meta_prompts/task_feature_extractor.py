@@ -36,6 +36,10 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 import torch
+import torch.multiprocessing
+
+# More robust DataLoader behavior for large datasets such as ImageNet.
+torch.multiprocessing.set_sharing_strategy('file_system')
 import torch.nn.functional as F
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
@@ -316,7 +320,7 @@ def encode_image_features(
     impaths: List[str] = []
 
     for batch in tqdm(loader, desc="Extracting image features", leave=False):
-        images = batch["img"].to(device)
+        images = batch["img"].to(device).float()
         image_features = clip_model.encode_image(images)
         image_features = F.normalize(image_features.float(), dim=-1)
 
@@ -425,6 +429,32 @@ def maybe_mkdir_for_file(path: str) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
 
 
+def subsample_per_class(data_source: Sequence, max_per_class: int, seed: int) -> List:
+    """Return a deterministic class-balanced subset.
+
+    This is useful for very large datasets such as ImageNet, where extracting
+    CLIP features for the full training set is expensive. The sampled subset
+    still covers all classes when each class has at least max_per_class samples.
+    """
+    if max_per_class is None or max_per_class <= 0:
+        return list(data_source)
+
+    rng = random.Random(seed)
+    grouped = defaultdict(list)
+    for item in data_source:
+        grouped[int(item.label)].append(item)
+
+    sampled = []
+    for label in sorted(grouped.keys()):
+        items = grouped[label]
+        if len(items) > max_per_class:
+            items = rng.sample(items, max_per_class)
+        sampled.extend(items)
+
+    rng.shuffle(sampled)
+    return sampled
+
+
 def extract_features(args: argparse.Namespace) -> FeatureResult:
     bootstrap_coop_imports(args.coop_root)
     import_default_coop_modules()
@@ -441,11 +471,29 @@ def extract_features(args: argparse.Namespace) -> FeatureResult:
     classnames = get_classnames(dataset)
     split_data = select_split(dataset, args.split)
 
+    if args.max_samples_per_class and args.max_samples_per_class > 0:
+        original_n = len(split_data)
+        split_data = subsample_per_class(
+            split_data,
+            max_per_class=args.max_samples_per_class,
+            seed=args.seed,
+        )
+        print(
+            f"[INFO] Class-balanced feature subset: "
+            f"{original_n} -> {len(split_data)} samples "
+            f"({args.max_samples_per_class} per class max)"
+        )
+
     clip_model = load_clip_to_cpu(cfg)
     clip_model.eval()
 
     device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
-    clip_model = clip_model.to(device)
+
+    # Force fp32 for task feature extraction.
+    # CoOp's CLIP loader may build RN50 in fp16. If the model or input falls back
+    # to CPU, fp16 avg_pool2d is unsupported and will crash. Using fp32 here is
+    # slower but safer and does not affect the actual training method.
+    clip_model = clip_model.to(device).float()
 
     text_features = encode_text_features(
         classnames=classnames,
@@ -576,6 +624,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument(
+        "--max-samples-per-class",
+        type=int,
+        default=0,
+        help="Optional class-balanced cap for feature extraction; useful for ImageNet.",
+    )
     parser.add_argument("--eps", type=float, default=1e-8)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--cpu", action="store_true", help="Force CPU even if CUDA is available")

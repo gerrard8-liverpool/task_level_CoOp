@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import os.path as osp
 import sys
 from pathlib import Path
@@ -28,6 +29,12 @@ from meta_prompts.prior_residual_adapter import PriorResidualAdapter
 from meta_prompts.shot_weighting import weighted_fewshot_loss
 
 _tokenizer = _Tokenizer()
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name, str(default))
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
 
 
 def load_clip_to_cpu(cfg):
@@ -121,7 +128,19 @@ class PromptLearnerPriorRes(nn.Module):
         self.class_token_position = cfg.TRAINER.COOP.CLASS_TOKEN_POSITION
         self.use_context_gating = bool(cfg.TRAINER.COOP.USE_CONTEXT_GATING)
 
-    def _apply_residual_modulation(self, context_gates: torch.Tensor, lambda_t: torch.Tensor) -> torch.Tensor:
+        # Residual formula switch:
+        #   USE_LEGACY_RESIDUAL=True  -> old formula: ctx + lambda * (a - 1)  * u_ctx
+        #   USE_LEGACY_RESIDUAL=False -> safe formula: ctx + lambda * (a - a0) * u_ctx
+        self.use_legacy_residual = _env_flag("USE_LEGACY_RESIDUAL", default=False)
+        mode = "legacy:(a-1)" if self.use_legacy_residual else "identity-centered:(a-a0)"
+        print(f"[PriorRes] residual modulation mode = {mode}")
+
+    def _apply_residual_modulation(
+        self,
+        context_gates: torch.Tensor,
+        lambda_t: torch.Tensor,
+        context_gates_base: torch.Tensor = None,
+    ) -> torch.Tensor:
         ctx = self.ctx
 
         if not self.use_context_gating:
@@ -137,18 +156,46 @@ class PromptLearnerPriorRes(nn.Module):
         if gate.dim() == 2:
             gate = gate.squeeze(0)
 
+        if self.use_legacy_residual:
+            # Original formulation:
+            #   ctx_eff = ctx + lambda_t * (a - 1) * u_ctx
+            centered_gate = gate - 1.0
+        else:
+            # Identity-centered safe formulation:
+            #   ctx_eff = ctx + lambda_t * (a - a0) * u_ctx
+            #
+            # If a0 is unavailable for any reason, fall back to gate.detach(),
+            # making the shift zero instead of injecting an unsafe residual.
+            if context_gates_base is None:
+                gate_base = gate.detach()
+            else:
+                gate_base = context_gates_base.to(device=ctx.device, dtype=ctx.dtype).detach()
+                if gate_base.dim() == 2:
+                    gate_base = gate_base.squeeze(0)
+
+            centered_gate = gate - gate_base
+
         lam = lambda_t.to(device=ctx.device, dtype=ctx.dtype).view(1)
 
         if ctx.dim() == 2:
-            shift = (gate - 1.0).unsqueeze(-1) * self.u_ctx
+            shift = centered_gate.unsqueeze(-1) * self.u_ctx
             return ctx + lam * shift
 
-        gate = gate.unsqueeze(0).unsqueeze(-1)
-        shift = (gate - 1.0) * self.u_ctx
+        centered_gate = centered_gate.unsqueeze(0).unsqueeze(-1)
+        shift = centered_gate * self.u_ctx
         return ctx + lam * shift
 
-    def forward(self, context_gates: torch.Tensor = None, lambda_t: torch.Tensor = None):
-        ctx = self._apply_residual_modulation(context_gates, lambda_t)
+    def forward(
+        self,
+        context_gates: torch.Tensor = None,
+        lambda_t: torch.Tensor = None,
+        context_gates_base: torch.Tensor = None,
+    ):
+        ctx = self._apply_residual_modulation(
+            context_gates=context_gates,
+            lambda_t=lambda_t,
+            context_gates_base=context_gates_base,
+        )
         if ctx.dim() == 2:
             ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1)
 
@@ -226,9 +273,20 @@ class CustomCLIPPriorRes(nn.Module):
         prompts = self.prompt_learner(
             context_gates=adapter_out["a"],
             lambda_t=adapter_out["lambda_t"],
+            context_gates_base=adapter_out.get("a0", None),
         )
         tokenized_prompts = self.tokenized_prompts
-        text_features = self.text_encoder(prompts, tokenized_prompts)
+        text_batch_size = int(os.environ.get("TEXT_BATCH_SIZE", "0"))
+        if text_batch_size > 0 and prompts.shape[0] > text_batch_size:
+            text_features_list = []
+            for start in range(0, prompts.shape[0], text_batch_size):
+                end = start + text_batch_size
+                text_features_list.append(
+                    self.text_encoder(prompts[start:end], tokenized_prompts[start:end])
+                )
+            text_features = torch.cat(text_features_list, dim=0)
+        else:
+            text_features = self.text_encoder(prompts, tokenized_prompts)
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)

@@ -22,6 +22,7 @@ FEATURE_JSON=${FEATURE_JSON:-$ROOT/outputs/task_features/${DATASET}_train.json}
 FORCE_EXTRACT=${FORCE_EXTRACT:-0}
 
 USE_CONTEXT_GATING=${USE_CONTEXT_GATING:-True}
+USE_LEGACY_RESIDUAL=${USE_LEGACY_RESIDUAL:-False}
 USE_B=${USE_B:-False}
 META_HIDDEN_DIM=${META_HIDDEN_DIM:-64}
 META_KMAX=${META_KMAX:-16}
@@ -64,6 +65,7 @@ if [[ ! -f "$COOP_ROOT/$TRAIN_CFG" ]]; then
 fi
 
 export PYTHONPATH="$SRC_ROOT:$COOP_ROOT:${PYTHONPATH:-}"
+export USE_LEGACY_RESIDUAL
 mkdir -p "$(dirname "$FEATURE_JSON")"
 mkdir -p "$OUT_DIR"
 
@@ -127,6 +129,7 @@ run_train() {
   echo "       nctx  (m)    = $NCTX"
   echo "       seed         = $SEED"
   echo "       use_b        = $USE_B"
+  echo "       legacy_res   = $USE_LEGACY_RESIDUAL"
   echo "       feature_json = $FEATURE_JSON"
   echo "       output_dir   = $OUT_DIR"
 
