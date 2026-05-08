@@ -91,3 +91,24 @@ third_party/CoOp_clean/datasets/**/*~
 third_party/CoOp_clean/datasets/**/*.orig
 third_party/CoOp_clean/datasets/**/__pycache__/
 third_party/CoOp_clean/datasets/**/*.pyc
+
+# Local backups
+*.bak
+*.bak_*
+*.backup
+*.tmp
+
+# Temporary transfer / archive dirs
+_transfer/
+and heavy files/
+third_party/CoOp_broken_*/
+run_safe_noalt_remaining.sh
+
+# Local packaging outputs
+outputs/final_phase1_package_*/
+outputs/final_phase1_package_*.zip
+
+# Heavy experiment outputs
+third_party/CoOp_clean/output/
+outputs/ablations/
+outputs/xd_main_tables/

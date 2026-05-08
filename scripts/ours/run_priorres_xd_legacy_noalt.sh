@@ -6,8 +6,8 @@ COOP_ROOT=${COOP_ROOT:-$ROOT/third_party/CoOp_clean}
 SRC_ROOT=${SRC_ROOT:-$ROOT/src}
 DATA_ROOT=${DATA_ROOT:-/workspace/datasets}
 
-SOURCE=${1:?Usage: bash run_priorres_xd_safe_noalt.sh <source_dataset> <seed> <target1> [target2 ...]}
-SEED=${2:?Usage: bash run_priorres_xd_safe_noalt.sh <source_dataset> <seed> <target1> [target2 ...]}
+SOURCE=${1:?Usage: bash run_priorres_xd_legacy_noalt.sh <source_dataset> <seed> <target1> [target2 ...]}
+SEED=${2:?Usage: bash run_priorres_xd_legacy_noalt.sh <source_dataset> <seed> <target1> [target2 ...]}
 shift 2
 TARGETS=("$@")
 
@@ -33,16 +33,16 @@ SOURCE_FEATURE_JSON=${SOURCE_FEATURE_JSON:-$ROOT/outputs/task_features/${SOURCE}
 #   target = use target task feature during target evaluation; exploratory only, less strict
 TEST_FEATURE_MODE=${TEST_FEATURE_MODE:-source}
 
-COMMON="source_${SOURCE}/shots_${SHOTS}/CoOpPriorRes/${TRAIN_CFG_TAG}/nctx${NCTX}_csc${CSC}_ctp${CTX_POS}_safe_noalt/seed${SEED}"
+COMMON="source_${SOURCE}/shots_${SHOTS}/CoOpPriorRes/${TRAIN_CFG_TAG}/nctx${NCTX}_csc${CSC}_ctp${CTX_POS}_legacy_noalt/seed${SEED}"
 TRAIN_DIR="$COOP_ROOT/output/xd/train/${COMMON}"
 
 export PYTHONPATH="$SRC_ROOT:$COOP_ROOT:${PYTHONPATH:-}"
-export USE_LEGACY_RESIDUAL=False
+export USE_LEGACY_RESIDUAL=True
 
 cd "$COOP_ROOT"
 
 echo "============================================================"
-echo "[XD PriorRes TRAIN SOURCE]"
+echo "[XD Legacy PriorRes TRAIN SOURCE]"
 echo "source      = ${SOURCE}"
 echo "seed        = ${SEED}"
 echo "out         = ${TRAIN_DIR}"
@@ -90,7 +90,7 @@ for TARGET in "${TARGETS[@]}"; do
   TEST_DIR="$COOP_ROOT/output/xd/test/${TARGET}/${COMMON}"
 
   echo "============================================================"
-  echo "[XD PriorRes TEST TARGET]"
+  echo "[XD Legacy PriorRes TEST TARGET]"
   echo "source      = ${SOURCE}"
   echo "target      = ${TARGET}"
   echo "seed        = ${SEED}"
@@ -133,4 +133,4 @@ for TARGET in "${TARGETS[@]}"; do
     TRAINER.COOP.DELTA_B_REG 1e-4
 done
 
-echo "[DONE] XD PriorRes source=${SOURCE} seed=${SEED}"
+echo "[DONE] XD Legacy PriorRes source=${SOURCE} seed=${SEED}"
