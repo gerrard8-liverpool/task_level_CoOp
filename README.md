@@ -1,8 +1,16 @@
 # Safe Dataset-Prior Residual Prompt Adaptation for Robust Transfer
 
+> Current stage: **Phase 1 completed**  
+> Main implementation: **CoOpPriorRes** on top of CoOp / CLIP RN50  
+> Current main method: **Safe PriorRes no_b**  
+> Main evidence: **cross-dataset domain generalization (DG)**  
+> Last updated: May 2026
+
+---
+
 ## 1. Project Overview
 
-This project studies how to inject dataset-level task priors into prompt learning for CLIP-based vision-language models.
+This project studies how to inject **dataset-level task priors** into CLIP-based prompt learning.
 
 The current implementation is based on **CoOp** and is named:
 
@@ -10,29 +18,35 @@ The current implementation is based on **CoOp** and is named:
 CoOpPriorRes
 ```
 
-The central idea is to use dataset-level statistics to generate a task-conditioned residual prompt adapter. Instead of manually treating prompt hyperparameters such as context length `m` and shots `k` as fixed static choices, the model learns a dataset-conditioned modulation over prompt tokens.
+The core idea is to extract dataset-level statistics before prompt training and use them to generate a task-conditioned residual adapter over CoOp's learnable context tokens.
 
 The current stable version is:
 
 ```text
-Safe PriorRes = dataset-conditioned residual prompt adaptation with identity-centered initialization
+Safe PriorRes = identity-centered dataset-prior residual prompt adaptation
 ```
 
-The project has evolved from a simple CoOp modification into a broader direction:
+The project should be framed as:
 
 ```text
-Safe Dataset-Prior Prompt Adapter
+A dataset-prior prompt adapter for robust cross-dataset transfer.
 ```
 
-The long-term goal is to build a universal adapter interface that can be inserted into prompt learning models such as CoOp, CoCoOp, MaPLe, PromptSRC, and related methods.
+It should **not** be framed as:
+
+```text
+A CoOp variant that always improves in-domain accuracy.
+```
+
+The strongest current evidence is not pure in-domain few-shot classification, but **cross-dataset domain generalization**.
 
 ---
 
-## 2. Core Motivation
+## 2. Core Research Question
 
-Existing prompt learning methods such as CoOp optimize continuous prompts on a given dataset but usually do not explicitly model dataset-level distributional properties.
+Standard prompt learning methods such as CoOp optimize continuous prompts on a target dataset, but they do not explicitly model dataset-level distributional properties.
 
-However, different datasets have very different characteristics:
+Different visual recognition datasets differ in:
 
 - number of classes;
 - semantic similarity between classes;
@@ -41,16 +55,16 @@ However, different datasets have very different characteristics:
 - domain type;
 - source-target transfer difficulty.
 
-The hypothesis of this project is:
+This motivates the main question:
 
 ```text
-Dataset-level priors can help prompt learning become more robust under dataset/domain shift, as long as the prior is injected safely.
+Can dataset-level task priors be safely injected into prompt learning to improve robustness under dataset shift?
 ```
 
-The project does **not** claim that dataset priors universally improve in-domain few-shot accuracy. Instead, the current evidence suggests:
+Current answer from Phase 1:
 
 ```text
-Safe dataset-prior residual prompting is more useful for cross-dataset transfer than for pure in-domain few-shot classification.
+Yes, when the prior is source-aligned and injected with an identity-centered residual formulation.
 ```
 
 ---
@@ -59,13 +73,13 @@ Safe dataset-prior residual prompting is more useful for cross-dataset transfer 
 
 ### 3.1 Dataset-Level Task Feature
 
-For each dataset, we extract a task feature vector:
+For each dataset `D`, a task feature vector is extracted:
 
 ```text
 z_D = phi(D)
 ```
 
-The current task features include transformed statistics derived from:
+Current task features include transformed statistics derived from:
 
 - number of classes;
 - semantic similarity;
@@ -73,23 +87,51 @@ The current task features include transformed statistics derived from:
 - inter-class dispersion;
 - Fisher-like separability.
 
-These features are saved as JSON files:
+Task feature files are saved as:
 
 ```text
 outputs/task_features/<dataset>_train.json
 ```
 
-For ImageNet, a sampled version is used due to scale:
+The Phase 1 package also contains:
+
+```text
+outputs/task_features/mean_train_feature.json
+```
+
+This file is used by the **Safe-Mean** prior ablation.
+
+For ImageNet, a sampled feature file may be used:
 
 ```text
 outputs/task_features/imagenet_train_sample32.json
 ```
 
+ImageNet is currently treated as optional scaling and should not block the main paper.
+
 ---
 
-### 3.2 Legacy Residual Formulation
+### 3.2 Prior Adapter
 
-The initial residual formulation was:
+The dataset feature is fed into a lightweight adapter to generate a dataset-conditioned gate:
+
+```text
+a0 = f_theta(z_D)
+```
+
+During training, the model learns a deviation from this initial prior:
+
+```text
+a = a0 + delta_a
+```
+
+The adapter modulates the original CoOp context tokens through a residual direction.
+
+---
+
+### 3.3 Legacy Residual Formulation
+
+The legacy formulation is:
 
 ```text
 ctx_eff = ctx + lambda_t * (a - 1) * u_ctx
@@ -102,33 +144,23 @@ where:
 - `u_ctx` is a learnable residual direction;
 - `lambda_t` is a warmup/ramp-up coefficient.
 
-This formulation has a major problem:
+Problem:
 
 ```text
-If a0 is not exactly 1 at initialization, the model injects a non-zero random residual before learning.
+If a0 != 1 at initialization, the model injects a non-zero residual perturbation before learning meaningful deviations.
 ```
 
-This caused seed-dependent negative transfer, especially on EuroSAT.
-
-Observed failure case:
-
-```text
-EuroSAT seed3
-Legacy PriorRes: 71.3%
-Safe PriorRes:   77.9%
-```
+Therefore, Legacy PriorRes is **not identity-preserving**. It can behave as an aggressive residual variant. It may help in some DG settings, but Phase 1 results show that it is unstable across sources.
 
 ---
 
-### 3.3 Safe Residual Formulation
+### 3.4 Safe Residual Formulation
 
-The current main method uses identity-centered residual adaptation:
+The current main method uses:
 
 ```text
 ctx_eff = ctx + lambda_t * (a - a0) * u_ctx
 ```
-
-where `a0` is the initial dataset-conditioned prior gate.
 
 At initialization:
 
@@ -137,9 +169,9 @@ a = a0
 ctx_eff = ctx
 ```
 
-Therefore, the model starts exactly as vanilla CoOp and only deviates when the learned residual becomes useful during training.
+Therefore, Safe PriorRes starts exactly from vanilla CoOp and only deviates when the residual branch learns useful task-conditioned changes.
 
-This is the key technical design of the current project.
+This identity-centered formulation is the key technical design of the current method.
 
 ---
 
@@ -161,154 +193,112 @@ In words:
 safe residual + no alternate optimization + no sample-weighting branch
 ```
 
-Default prompt setting:
+Default experimental setting:
 
 ```text
-backbone = RN50
-m = 16
-k = 16
-CSC = False
-class token position = end
-seeds = 1, 2, 3
+Backbone: RN50
+N_CTX / m: 16
+Shots / k: 16
+CSC: False
+Class token position: end
+Seeds: 1, 2, 3
 ```
 
-The current main model should be referred to as:
+The finalized DG protocol should follow the old main CoOp protocol:
 
 ```text
-Safe PriorRes no_b
+Precision: fp16
+Train batch size: 32
+Test batch size: 100
 ```
+
+The DG scripts should **not** explicitly override:
+
+```text
+TRAINER.COOP.PREC fp32
+DATALOADER.TRAIN_X.BATCH_SIZE 16
+DATALOADER.TEST.BATCH_SIZE 64
+```
+
+This was a previously identified source of protocol mismatch.
 
 ---
 
-## 5. Code Structure
+## 5. Important Code and Package Structure
 
-Important files:
+### 5.1 Main Trainer Files
 
 ```text
 third_party/CoOp_clean/trainers/coop_priorres.py
 third_party/CoOp_clean/trainers/coop.py
+```
+
+### 5.2 Meta-Prompt / Prior-Adapter Files
+
+```text
 src/meta_prompts/task_feature_extractor.py
 src/meta_prompts/task_feature_loader.py
 src/meta_prompts/prior_residual_adapter.py
 src/meta_prompts/shot_weighting.py
+src/meta_prompts/meta_network.py
+src/meta_prompts/compute_feature_stats.py
 ```
 
-Important running scripts:
+### 5.3 Main DG Scripts
 
 ```text
-third_party/CoOp_clean/scripts/ours/run_priorres_any_dataset.sh
-scripts/ours/run_priorres_b2n_safe_noalt.sh
-scripts/ours/run_coop_b2n_m16k16.sh
-scripts/ours/run_priorres_xd_safe_noalt.sh
 scripts/ours/run_coop_xd_m16k16.sh
-scripts/ours/run_xd_multisource_pair_compare.sh
-scripts/ours/summarize_xd_compare.py
+scripts/ours/run_priorres_xd_safe_noalt.sh
+scripts/ours/run_priorres_xd_legacy_noalt.sh
 scripts/ours/summarize_xd_multisource_compare.py
+scripts/ours/summarize_xd_multisource_compare_with_legacy.py
+```
+
+### 5.4 Safe Prior Ablation Scripts
+
+```text
+scripts/ablations/safe_prior/run_safe_prior_xd.sh
+scripts/ablations/safe_prior/summarize_safe_prior_xd.py
+```
+
+### 5.5 B2N Scripts
+
+```text
+scripts/ours/run_coop_b2n_m16k16.sh
+scripts/ours/run_priorres_b2n_safe_noalt.sh
 scripts/ours/summarize_b2n_compare.py
 ```
 
 ---
 
-## 6. Completed Experiments
+## 6. Completed Phase 1 Experiments
 
-### 6.1 In-Domain Few-Shot Classification
-
-Datasets:
+Phase 1 currently contains the following completed experiment groups:
 
 ```text
-OxfordPets
-EuroSAT
-DTD
-Food101
-OxfordFlowers
-Caltech101
-StanfordCars
-FGVCAircraft
-UCF101
-SUN397
+1. Cross-dataset DG main experiment
+2. Safe prior ablation: Real / Mean / Shuffle
+3. Base-to-New auxiliary experiment
+4. In-domain auxiliary experiment
+5. Residual formulation analysis
+6. Mechanism log extraction
 ```
 
-Main conclusion:
+The old Safe-only DG table is now deprecated. The current main DG table is:
 
 ```text
-Safe PriorRes achieves competitive same-parameter CoOp performance on in-domain few-shot classification.
-```
-
-It does not consistently outperform CoOp on all datasets. Its role in the paper should be framed as:
-
-```text
-Safe PriorRes preserves CoOp-level in-domain performance while enabling more robust transfer under dataset shift.
-```
-
-Key observation:
-
-```text
-Safe residual fixes the instability of the legacy residual formulation.
+results/dg_main/xd_multisource_coop_safe_legacy.md
 ```
 
 ---
 
-### 6.2 Base-to-New Generalization
+## 7. Main Result: Cross-Dataset DG
 
-B2N setting:
+### 7.1 Setting
 
-```text
-train on base classes
-test on base classes
-test on new classes
-report base / new / HM
-```
+Train on one source dataset and evaluate on the remaining target datasets.
 
-Current result summary:
-
-```text
-Average Delta:
-Base: -0.17
-New:  +0.05
-HM:   +0.12
-```
-
-Strong positive case:
-
-```text
-DTD:
-Delta New = +9.13
-Delta HM  = +7.99
-```
-
-Other positive cases:
-
-```text
-FGVC-Aircraft:
-Delta HM = +1.21
-
-UCF101:
-Delta HM = +1.30
-```
-
-Conclusion:
-
-```text
-B2N performance is comparable to CoOp on average, with dataset-dependent gains.
-```
-
-B2N should be used as auxiliary evidence rather than the main claim.
-
----
-
-### 6.3 Cross-Dataset Domain Generalization
-
-This is currently the strongest evidence for the project.
-
-The main cross-dataset transfer setting is:
-
-```text
-train on one source dataset
-evaluate on the remaining target datasets
-compare Safe PriorRes against CoOp
-```
-
-Recommended main DG sources:
+Main sources:
 
 ```text
 Caltech101
@@ -316,531 +306,393 @@ Food101
 SUN397
 ```
 
-Source-level results:
-
-| Source | Avg Delta |
-|---|---:|
-| Caltech101 | +1.43 |
-| Food101 | +1.88 |
-| SUN397 | +0.20 |
-
-Estimated main-source average:
+Compared methods:
 
 ```text
-(+1.43 + 1.88 + 0.20) / 3 = +1.17
+CoOp
+Safe PriorRes
+Legacy PriorRes
 ```
 
-Additional source-dependency analysis:
+### 7.2 Source-Level Summary
 
-| Source | Avg Delta |
-|---|---:|
-| OxfordPets | -1.12 |
+| Source | Safe-CoOp Avg Delta | Legacy-CoOp Avg Delta | Legacy-Safe |
+|---|---:|---:|---:|
+| Caltech101 | +1.43 | +2.24 | +0.81 |
+| Food101 | +2.21 | -0.04 | -2.24 |
+| SUN397 | +0.20 | -4.65 | -4.85 |
+| **Overall** | **+1.28** | **-0.82** | **-2.10** |
 
-Interpretation:
+Seed-level positive cases:
 
 ```text
-Broad and diverse source datasets such as Caltech101 and Food101 provide more transferable dataset-conditioned priors.
-SUN397 is more difficult and semantically different from several targets, but still gives weak positive average transfer.
-OxfordPets is a narrow fine-grained source and may induce source-specific bias, resulting in negative average transfer.
+Safe > CoOp:   52/81
+Legacy > CoOp: 39/81
 ```
 
-Main DG claim:
+### 7.3 Interpretation
+
+The DG result supports the current main claim:
 
 ```text
-Safe PriorRes improves cross-dataset transfer on average across multiple broad/diverse source datasets, while the benefit remains source-target dependent.
+Safe PriorRes improves cross-dataset transfer on average and is more robust across source datasets than Legacy PriorRes.
 ```
 
----
+Legacy is not useless. It is an aggressive residual variant:
 
-## 7. Current Interpretation
+- it is stronger than Safe on Caltech101-source DG;
+- it is unstable on Food101;
+- it causes severe negative transfer on SUN397.
 
-The current evidence supports the following refined research claim:
-
-```text
-Dataset-conditioned residual prompt adaptation is not primarily an in-domain accuracy booster.
-Its main value lies in improving robustness and transferability under dataset shift.
-```
-
-The safe residual design is important because naive residual injection can hurt performance by introducing non-identity perturbations at initialization.
-
-The project should be framed as:
+Therefore, the correct interpretation is:
 
 ```text
-A safe dataset-prior prompt adapter for robust cross-dataset transfer.
-```
-
-rather than:
-
-```text
-A CoOp variant that always improves accuracy.
+Safe = conservative and robust identity-centered residual formulation.
+Legacy = aggressive but source-dependent residual formulation.
 ```
 
 ---
 
-## 8. Recommended Main Experimental Story
+## 8. Safe Dataset-Prior Ablation
+
+### 8.1 Purpose
+
+This ablation answers the key reviewer question:
+
+```text
+Does the gain come from meaningful dataset priors, or merely from adding residual adapter parameters?
+```
+
+Compared variants:
+
+| Variant | Description |
+|---|---|
+| Safe-Real | uses the true source dataset feature |
+| Safe-Mean | uses a global averaged dataset feature |
+| Safe-Shuffle | uses a fixed mismatched dataset feature |
+
+Shuffle mapping:
+
+```text
+caltech101 source -> food101 feature
+food101 source    -> sun397 feature
+sun397 source     -> caltech101 feature
+```
+
+### 8.2 Source-Level Summary
+
+| Source | Real-CoOp | Mean-CoOp | Shuffle-CoOp | Real-Mean | Real-Shuffle |
+|---|---:|---:|---:|---:|---:|
+| Caltech101 | +1.43 | +1.10 | +1.10 | +0.33 | +0.33 |
+| Food101 | +2.21 | +1.57 | +1.29 | +0.63 | +0.92 |
+| SUN397 | +0.20 | -2.76 | -3.97 | +2.96 | +4.17 |
+| **Overall** | **+1.28** | **-0.03** | **-0.53** | **+1.31** | **+1.81** |
+
+### 8.3 Interpretation
+
+The ablation gives a clean conclusion:
+
+```text
+Safe-Real > Safe-Mean > Safe-Shuffle on average.
+```
+
+Therefore:
+
+```text
+The improvement is not mainly caused by adding a residual adapter.
+The source-aligned dataset prior is necessary.
+Mismatched priors can introduce negative transfer.
+```
+
+The strongest evidence appears for SUN397:
+
+```text
+Safe-Real:    +0.20
+Safe-Mean:    -2.76
+Safe-Shuffle: -3.97
+Real-Mean:    +2.96
+Real-Shuffle: +4.17
+```
+
+This means that for a scene-centric source such as SUN397, the real source prior mainly helps by preventing negative transfer caused by generic or mismatched priors.
+
+---
+
+## 9. Base-to-New Generalization
+
+### 9.1 Setting
+
+Train on base classes and evaluate on:
+
+```text
+base classes
+new classes
+harmonic mean (HM)
+```
+
+### 9.2 Average Result
+
+| Metric | Average Delta |
+|---|---:|
+| Base | -0.17 |
+| New | +0.05 |
+| HM | +0.12 |
+
+### 9.3 Positive Cases
+
+| Dataset | Delta New | Delta HM |
+|---|---:|---:|
+| DTD | +9.13 | +7.99 |
+| FGVC-Aircraft | +1.97 | +1.21 |
+| UCF101 | +2.27 | +1.30 |
+| Food101 | +0.43 | +0.11 |
+
+### 9.4 Interpretation
+
+B2N should be used as auxiliary evidence:
+
+```text
+PriorRes is comparable to CoOp on average under B2N, with strong dataset-dependent gains on DTD and smaller gains on FGVC-Aircraft and UCF101.
+```
+
+Do not claim that the method universally improves B2N.
+
+---
+
+## 10. In-Domain Few-Shot Classification
+
+In-domain experiments are auxiliary.
+
+Current interpretation:
+
+```text
+Safe PriorRes preserves CoOp-level in-domain performance but is not designed as a universal in-domain accuracy booster.
+```
+
+This is consistent with the project framing:
+
+```text
+Main value = robust cross-dataset transfer.
+Auxiliary value = competitive in-domain and B2N performance.
+```
+
+Some historical in-domain entries, such as OxfordPets, may be incomplete. This does not block the main DG-centered paper story.
+
+---
+
+## 11. Residual Formulation Analysis
+
+### 11.1 In-Domain Residual Ablation
+
+Previously observed in-domain residual ablation:
+
+```text
+Safe-CoOp average:   +0.59
+Safe-Legacy average: +0.40
+```
+
+This supports the claim that the safe formulation is stable in standard in-domain training.
+
+### 11.2 DG Residual Interpretation
+
+The three-source DG table gives the more important conclusion:
+
+```text
+Legacy can be stronger for Caltech101-source transfer but is not robust across sources.
+Safe is more reliable overall.
+```
+
+Therefore, the residual story should be written as:
+
+```text
+There is a safety-transfer trade-off.
+Identity-centered residual adaptation is more robust across sources, while non-identity residual injection can act as an aggressive but unstable transfer variant.
+```
+
+---
+
+## 12. Mechanism Analysis Status
+
+Mechanism logs have been extracted and saved in:
+
+```text
+mechanism_checks/
+```
+
+Current files include:
+
+```text
+safe_main_train_meff_keff_a0.txt
+safe_mean_train_meff_keff_a0.txt
+safe_shuffle_train_meff_keff_a0.txt
+legacy_train_meff_keff_a0.txt
+```
+
+These can be used later to analyze:
+
+```text
+meff
+keff
+a0_mean
+b0_mean
+lambda_t
+delta / delta_a
+```
+
+Recommended future mechanism analysis:
+
+```text
+1. Compare Safe vs Legacy residual dynamics.
+2. Compare Safe-Real vs Safe-Mean vs Safe-Shuffle gate behavior.
+3. Show that Safe starts from identity and learns task-conditioned deviations.
+4. Analyze source-target feature distance versus DG delta.
+```
+
+Mechanism plots are useful for the paper but are not blocking for Phase 1 completion.
+
+---
+
+## 13. Current Paper-Level Story
 
 The current paper should follow this logic:
 
-### Step 1: Identify the problem
+### Step 1: Problem
 
-CoOp learns prompts in a dataset-specific way but does not explicitly model dataset-level distributional properties.
+CoOp-style prompt learning does not explicitly use dataset-level distributional priors.
 
-### Step 2: Propose dataset-prior residual adaptation
+### Step 2: Method
 
-Use task features to generate prompt modulation.
+Introduce dataset-prior residual prompt adaptation.
 
-### Step 3: Show naive residual is unsafe
+### Step 3: Safety
 
-Legacy residual can cause seed-dependent negative transfer.
+Naive residual injection is not identity-preserving. Safe PriorRes starts from vanilla CoOp and learns residual deviations gradually.
 
-### Step 4: Propose identity-centered safe residual
+### Step 4: Main empirical evidence
 
-Safe residual preserves CoOp behavior at initialization.
+Cross-dataset DG shows Safe PriorRes is robust across sources:
 
-### Step 5: Show in-domain preservation
+```text
+Safe overall:   +1.28
+Legacy overall: -0.82
+```
 
-Safe PriorRes remains close to same-parameter CoOp on base few-shot tasks.
+### Step 5: Prior validity
 
-### Step 6: Show DG advantage
+Safe-Real beats Safe-Mean and Safe-Shuffle:
 
-Safe PriorRes improves cross-dataset transfer on average across broad/diverse source datasets.
+```text
+Safe-Real:    +1.28
+Safe-Mean:    -0.03
+Safe-Shuffle: -0.53
+```
 
-### Step 7: Analyze source dependency
+### Step 6: Auxiliary generalization
 
-OxfordPets negative result shows that narrow fine-grained sources may produce less transferable priors.
+B2N is comparable on average, with strong positive cases such as DTD.
 
 ---
 
-## 9. Next Ablation Plan
+## 14. What Not to Claim
 
-The next experiments should not blindly add more datasets. They should directly support the core mechanism.
-
-### 9.1 Residual Formulation Ablation
-
-Compare:
-
-| Variant | Formula | Purpose |
-|---|---|---|
-| CoOp | no residual | baseline |
-| Legacy PriorRes | `ctx + lambda*(a-1)*u` | show unsafe residual |
-| Safe PriorRes | `ctx + lambda*(a-a0)*u` | main method |
-
-Important case study:
+Do not claim:
 
 ```text
-EuroSAT seed3:
-Legacy: 71.3%
-Safe:   77.9%
+Safe PriorRes always improves in-domain accuracy.
+Safe PriorRes universally improves B2N.
+Legacy is always worse than Safe.
+Dataset prior always helps regardless of source-target relation.
 ```
 
-Expected conclusion:
+Correct claims:
 
 ```text
-Identity-centered residual injection is necessary to avoid seed-dependent negative transfer.
-```
-
----
-
-### 9.2 Dataset Prior Ablation
-
-Compare:
-
-| Variant | Purpose |
-|---|---|
-| CoOp | no prior |
-| Safe residual with random feature | controls for extra parameters |
-| Safe residual with constant feature | controls for task-independent adapter |
-| Safe residual with dataset feature | main method |
-
-Expected conclusion:
-
-```text
-Dataset-level features provide meaningful task-conditioned modulation beyond simply adding parameters.
+Safe PriorRes improves cross-dataset DG on average across multiple sources.
+Safe is more robust than Legacy across sources.
+Source-aligned dataset priors are necessary for stable gains.
+B2N performance is comparable on average and dataset-dependent.
 ```
 
 ---
 
-### 9.3 a-Branch and b-Branch Ablation
+## 15. Current Project Completion
 
-Current main method uses:
-
-```text
-a branch only
-USE_B=False
-```
-
-Ablation variants:
-
-| Variant | Purpose |
-|---|---|
-| a-only | main stable context residual |
-| b-only | sample/shot weighting only |
-| a+b | combined prior |
-| no_b | main recommended configuration |
-
-Current observation:
-
-```text
-b branch with B_LOSS_WEIGHT=0.2 is unstable on base tasks.
-```
-
-Recommended conclusion:
-
-```text
-Context-side dataset prior is more stable than sample-weighting prior in the current setting.
-```
-
----
-
-### 9.4 Source Diversity Ablation
-
-Use source datasets with different properties:
-
-| Source | Type | Expected Behavior |
-|---|---|---|
-| Caltech101 | broad object source | strong positive |
-| Food101 | broad natural source | strong positive |
-| SUN397 | large scene source | weak positive |
-| OxfordPets | narrow fine-grained source | negative or unstable |
-
-Analysis goal:
-
-```text
-Study how source dataset diversity affects transferability of dataset-conditioned priors.
-```
-
-This is important because it turns OxfordPets from a bad result into a meaningful negative case.
-
----
-
-### 9.5 Strength and Warmup Ablation
-
-Ablate:
-
-```text
-lambda_max
-warmup_epochs
-ramp_epochs
-META_LR_RATIO
-INIT_GATE_BIAS
-```
-
-Recommended small grid:
-
-| Hyperparameter | Values |
-|---|---|
-| `lambda_max` | 0.5, 1.0 |
-| `META_LR_RATIO` | 0.1, 0.3, 1.0 |
-| `INIT_GATE_BIAS` | 2.0, 4.0 |
-| `warmup_epochs` | 0, 5 |
-| `ramp_epochs` | 5, 10 |
-
-Do not overdo this grid. The purpose is not to tune the best number, but to show robustness.
-
----
-
-## 10. Mechanism and Theoretical Analysis Plan
-
-### 10.1 Identity-Preserving Initialization
-
-Key theoretical point:
-
-```text
-Legacy residual does not guarantee identity initialization.
-Safe residual guarantees identity initialization.
-```
-
-Legacy:
-
-```text
-ctx_eff = ctx + lambda*(a-1)*u
-```
-
-At initialization:
-
-```text
-a = a0
-ctx_eff = ctx + lambda*(a0-1)*u
-```
-
-If `a0 != 1`, the model is already perturbed.
-
-Safe:
-
-```text
-ctx_eff = ctx + lambda*(a-a0)*u
-```
-
-At initialization:
-
-```text
-a = a0
-ctx_eff = ctx
-```
-
-Therefore, safe residual starts exactly from CoOp.
-
-This can be written as a stability guarantee:
-
-```text
-Safe residual bounds the initial perturbation norm to zero.
-```
-
----
-
-### 10.2 Residual Norm Analysis
-
-Track:
-
-```text
-|| lambda_t * (a - a0) * u ||
-```
-
-over training.
-
-Expected observation:
-
-```text
-Safe residual starts near zero and gradually increases.
-Legacy residual can start with non-zero perturbation.
-```
-
-This supports the argument that safe residual avoids unsafe early-stage prompt perturbation.
-
----
-
-### 10.3 Gate Deviation Analysis
-
-Track:
-
-```text
-a0
-a
-delta_a = a - a0
-meff
-```
-
-Potential table:
-
-| Dataset | mean(a0) | mean(a) | mean(|a-a0|) | meff | DG Delta |
-|---|---:|---:|---:|---:|---:|
-
-Goal:
-
-```text
-Show that the adapter learns non-trivial task-conditioned deviations rather than remaining identical to CoOp.
-```
-
----
-
-### 10.4 Source-Target Feature Distance
-
-Compute distance between source and target task features:
-
-```text
-d(source, target) = || z_source - z_target ||
-```
-
-Then compare it with:
-
-```text
-Delta = Acc(PriorRes) - Acc(CoOp)
-```
-
-The goal is not necessarily to prove strong linear correlation. The goal is to show:
-
-```text
-The effectiveness of dataset priors depends on the source-target distribution relationship.
-```
-
-This can support the interpretation of:
-
-```text
-Caltech101 / Food101 positive
-SUN397 weak positive
-OxfordPets negative
-```
-
----
-
-### 10.5 Case Studies
-
-Recommended case studies:
-
-| Case | Purpose |
-|---|---|
-| EuroSAT legacy failure | shows unsafe residual can cause negative transfer |
-| DTD B2N positive | shows texture-oriented transfer may benefit |
-| Caltech101/Food101 DG positive | shows broad source benefit |
-| OxfordPets source negative | shows narrow fine-grained source bias |
-| SUN397 weak positive | shows large but semantically distant source gives limited but stable gain |
-
----
-
-## 11. ImageNet Status
-
-ImageNet is currently treated as an optional scaling experiment.
-
-Reason:
-
-```text
-ImageNet has 1000 classes, and CoOp-style prompt learning encodes all class prompts through the text encoder.
-This creates a very large text-side computation graph and causes high memory usage on 24GB GPUs.
-```
-
-Possible strategies:
-
-1. use A100 for ImageNet-source DG;
-2. use text prompt chunking;
-3. use smaller batch size;
-4. use AMP/fp16;
-5. use class-subset logits;
-6. leave full ImageNet-source scaling as future work.
-
-Current recommendation:
-
-```text
-Do not let ImageNet block the main paper.
-Use non-ImageNet multi-source DG as the main result.
-```
-
----
-
-## 12. Universal Adapter Direction
-
-The next-stage goal is to make the method model-agnostic.
-
-The adapter should be abstracted as:
-
-```python
-class DatasetPriorAdapter(nn.Module):
-    def forward(task_feature):
-        return {
-            "context_gate": a,
-            "initial_gate": a0,
-            "residual_direction": u,
-            "sample_gate": b,
-        }
-```
-
-The core interface is:
-
-```python
-ctx_eff = ctx + lambda_t * (a - a0) * u_ctx
-```
-
-Potential target models:
-
-| Model | Adapter Location |
-|---|---|
-| CoOp | learnable context tokens |
-| CoCoOp | generated conditional context |
-| MaPLe | shallow/deep text and vision prompts |
-| PromptSRC | prompt tokens and regularization branch |
-
-Recommended first extension:
-
-```text
-CoCoOp + DatasetPriorAdapter
-```
-
-Reason:
-
-```text
-CoCoOp is structurally closer to CoOp and easier to adapt than MaPLe or PromptSRC.
-```
-
----
-
-## 13. Current Project Completion
-
-Current completion estimate:
+Estimated completion:
 
 | Module | Completion |
 |---|---:|
 | Method implementation | 85% |
-| Base few-shot experiments | 90% |
-| B2N experiments | 90% |
-| Multi-source DG experiments | 85% |
-| b-branch validation | 70% |
-| Mechanism analysis | 35% |
-| Paper writing | 30% |
-| Universal adapter abstraction | 25% |
+| DG main experiments | 95% |
+| Safe prior ablation | 95% |
+| B2N auxiliary experiments | 90% |
+| In-domain auxiliary experiments | 80% |
+| Residual formulation analysis | 85% |
+| Mechanism analysis | 45% |
+| Paper writing | 35% |
+| Universal adapter extension | 25% |
 | ImageNet scaling | optional |
 
-Overall:
+Overall status:
 
 ```text
-Preprint readiness: ~80%
-Main-conference readiness: ~60–65%
-Undergraduate research value: 90%+
+Phase 1 core experiments: completed.
+Preprint readiness: around 80%.
+Main-conference readiness: around 60%–65%.
 ```
 
 ---
 
-## 14. Publication Positioning
+## 16. Publication Positioning
 
 Current version:
 
 ```text
-Strong arXiv / workshop / CCF C
-CCF B competitive with better analysis
-AAAI / CCF A possible but not stable
+Strong arXiv / workshop / CCF C potential.
+CCF B becomes realistic with strong writing and mechanism analysis.
+AAAI / IJCAI / ACM MM is possible but still needs stronger generality evidence.
 ```
 
-With complete ablation and mechanism analysis:
+To improve main-conference potential, the next most important step is:
 
 ```text
-CCF B competitive
-AAAI / IJCAI / ACM MM can be seriously attempted
+CoCoOp / CoCoOpS adapter generality.
 ```
 
-With universal adapter + CoCoOp proof-of-concept:
+This would show that the method is not merely a CoOp-specific modification but a general dataset-prior prompt adapter.
+
+---
+
+## 17. Recommended Next Steps
+
+### Immediate
 
 ```text
-Main-conference potential becomes significantly stronger
+1. Keep the current Phase 1 package as the clean result archive.
+2. Start writing the method and experiment sections.
+3. Turn DG and prior ablation tables into paper-ready tables.
+4. Organize mechanism logs into a compact analysis table or figure.
+```
+
+### Next experimental stage
+
+```text
+1. Implement CoCoOp / CoCoOpS adapter version.
+2. Test whether dataset-prior residual adaptation generalizes beyond CoOp.
+3. Add mechanism plots if time allows.
+4. Consider source-target feature distance analysis.
+```
+
+### Optional
+
+```text
+1. ImageNet-source DG scaling.
+2. RandomFixed prior appendix baseline.
+3. Additional shuffle mappings.
+4. More complete in-domain table cleanup.
 ```
 
 ---
 
-## 15. Recommended Next Steps
+## 18. One-Sentence Summary
 
-Immediate next steps:
-
-1. Finalize DG main table:
-
-```bash
-python scripts/ours/summarize_xd_multisource_compare.py \
-  caltech101 food101 sun397 \
-  > outputs/xd_multisource_caltech_food_sun397_compare.md
-```
-
-2. Generate source-dependency table:
-
-```bash
-python scripts/ours/summarize_xd_multisource_compare.py \
-  caltech101 food101 sun397 oxford_pets \
-  > outputs/xd_multisource_with_pets_analysis.md
-```
-
-3. Prepare residual formulation ablation:
-
-```text
-CoOp vs Legacy PriorRes vs Safe PriorRes
-```
-
-4. Extract mechanism logs:
-
-```text
-a0, a, delta_a, meff, residual norm
-```
-
-5. Write paper draft.
-
-6. Start universal adapter refactor.
-
----
-
-## 16. One-Sentence Summary
-
-Safe PriorRes is a dataset-conditioned residual prompt adaptation framework that preserves CoOp-level in-domain performance, avoids unsafe residual initialization, and improves cross-dataset transfer on average across broad and diverse source datasets, while revealing source-dependent behavior in prompt transfer.
+Safe PriorRes is an identity-centered dataset-prior residual prompt adapter that preserves CoOp-level behavior at initialization, improves cross-dataset transfer robustness across multiple source datasets, and shows through Real / Mean / Shuffle ablation that source-aligned dataset priors—not merely extra adapter parameters—are responsible for the main gains.
