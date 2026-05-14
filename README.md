@@ -296,60 +296,53 @@ summary_tables/dg_main/xd_multisource_coop_safe_legacy.md
 
 ### 7.1 Setting
 
-Train on one source dataset and evaluate on the remaining target datasets.
+The main cross-dataset DG setting is to train on one source dataset and evaluate on unseen target datasets. CoOp, Safe PriorRes, and Legacy PriorRes are compared under the same RN50, 16-shot, 16-context protocol.
 
-Main sources:
+For strict DG evaluation, Safe PriorRes and Legacy PriorRes use only the source-side task prior during target evaluation. Target dataset features are not injected during target testing.
 
-```text
-Caltech101
-Food101
-SUN397
-```
+### 7.2 Primary DG Table: ImageNet-source DG
 
-Compared methods:
+The primary DG result should be the ImageNet-source cross-dataset result:
 
 ```text
-CoOp
-Safe PriorRes
-Legacy PriorRes
+summary_tables/dg_main/imagenet_source_dg.md
 ```
 
-### 7.2 Source-Level Summary
+This table should be treated as the main empirical result because ImageNet is the standard large-scale source domain for cross-dataset generalization.
 
-| Source | Safe-CoOp Avg Delta | Legacy-CoOp Avg Delta | Legacy-Safe |
+### 7.3 Auxiliary Analysis Table: Clean 4-source DG Rerun
+
+The clean protocol-aligned 4-source rerun is used for source-dependency and residual-formulation analysis, not as the primary DG table:
+
+```text
+summary_tables/dg_main/xd_multisource_coop_safe_legacy.md
+```
+
+Clean 4-source summary:
+
+| Source | Safe-CoOp Avg Delta | Legacy-CoOp Avg Delta | Safe-Legacy |
 |---|---:|---:|---:|
-| Caltech101 | +1.43 | +2.24 | +0.81 |
-| Food101 | +2.21 | -0.04 | -2.24 |
-| SUN397 | +0.20 | -4.65 | -4.85 |
-| **Overall** | **+1.28** | **-0.82** | **-2.10** |
+| Caltech101 | +0.70 | +0.83 | -0.14 |
+| Food101 | -0.47 | -0.34 | -0.14 |
+| SUN397 | +1.12 | -1.29 | +2.41 |
+| OxfordPets | +1.99 | +1.85 | +0.13 |
+| **4-source Overall** | **+0.83** | **+0.26** | **+0.57** |
 
-Seed-level positive cases:
+Three auxiliary non-ImageNet sources:
 
-```text
-Safe > CoOp:   52/81
-Legacy > CoOp: 39/81
-```
+| Source | Safe-CoOp Avg Delta | Legacy-CoOp Avg Delta | Safe-Legacy |
+|---|---:|---:|---:|
+| Caltech101 | +0.70 | +0.83 | -0.14 |
+| Food101 | -0.47 | -0.34 | -0.14 |
+| SUN397 | +1.12 | -1.29 | +2.41 |
+| **3-source Overall** | **+0.45** | **-0.27** | **+0.71** |
 
-### 7.3 Interpretation
+### 7.4 Interpretation
 
-The DG result supports the current main claim:
+The ImageNet-source DG table is the main cross-dataset benchmark. The clean 4-source rerun is used for source-dependency and residual-formulation analysis.
 
-```text
-Safe PriorRes improves cross-dataset transfer on average and is more robust across source datasets than Legacy PriorRes.
-```
+Safe PriorRes should not be described as a universal DG accuracy booster. Its main mechanism is residual safety: identity-centered residual injection prevents prior-induced non-identity prompt bias. The pairwise DG heatmaps show strong source-target dependency, so the 4-source rerun should support the mechanism discussion rather than replace the ImageNet-source DG main result.
 
-Legacy is not useless. It is an aggressive residual variant:
-
-- it is stronger than Safe on Caltech101-source DG;
-- it is unstable on Food101;
-- it causes severe negative transfer on SUN397.
-
-Therefore, the correct interpretation is:
-
-```text
-Safe = conservative and robust identity-centered residual formulation.
-Legacy = aggressive but source-dependent residual formulation.
-```
 
 ---
 
