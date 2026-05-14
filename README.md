@@ -261,15 +261,6 @@ scripts/ablations/safe_prior/run_safe_prior_xd.sh
 scripts/ablations/safe_prior/summarize_safe_prior_xd.py
 ```
 
-### 5.5 B2N Scripts
-
-```text
-scripts/ours/run_coop_b2n_m16k16.sh
-scripts/ours/run_priorres_b2n_safe_noalt.sh
-scripts/ours/summarize_b2n_compare.py
-```
-
----
 
 ## 6. Completed Phase 1 Experiments
 
@@ -278,7 +269,6 @@ Phase 1 currently contains the following completed experiment groups:
 ```text
 1. Cross-dataset DG main experiment
 2. Safe prior ablation: Real / Mean / Shuffle
-3. Base-to-New auxiliary experiment
 4. In-domain auxiliary experiment
 5. Residual formulation analysis
 6. Mechanism log extraction
@@ -411,46 +401,6 @@ This means that for a scene-centric source such as SUN397, the real source prior
 
 ---
 
-## 9. Base-to-New Generalization
-
-### 9.1 Setting
-
-Train on base classes and evaluate on:
-
-```text
-base classes
-new classes
-harmonic mean (HM)
-```
-
-### 9.2 Average Result
-
-| Metric | Average Delta |
-|---|---:|
-| Base | -0.17 |
-| New | +0.05 |
-| HM | +0.12 |
-
-### 9.3 Positive Cases
-
-| Dataset | Delta New | Delta HM |
-|---|---:|---:|
-| DTD | +9.13 | +7.99 |
-| FGVC-Aircraft | +1.97 | +1.21 |
-| UCF101 | +2.27 | +1.30 |
-| Food101 | +0.43 | +0.11 |
-
-### 9.4 Interpretation
-
-B2N should be used as auxiliary evidence:
-
-```text
-PriorRes is comparable to CoOp on average under B2N, with strong dataset-dependent gains on DTD and smaller gains on FGVC-Aircraft and UCF101.
-```
-
-Do not claim that the method universally improves B2N.
-
----
 
 ## 10. In-Domain Few-Shot Classification
 
@@ -466,7 +416,6 @@ This is consistent with the project framing:
 
 ```text
 Main value = robust cross-dataset transfer.
-Auxiliary value = competitive in-domain and B2N performance.
 ```
 
 Some historical in-domain entries, such as OxfordPets, may be incomplete. This does not block the main DG-centered paper story.
@@ -582,7 +531,6 @@ Safe-Shuffle: -0.53
 
 ### Step 6: Auxiliary generalization
 
-B2N is comparable on average, with strong positive cases such as DTD.
 
 ---
 
@@ -592,7 +540,6 @@ Do not claim:
 
 ```text
 Safe PriorRes always improves in-domain accuracy.
-Safe PriorRes universally improves B2N.
 Legacy is always worse than Safe.
 Dataset prior always helps regardless of source-target relation.
 ```
@@ -603,7 +550,6 @@ Correct claims:
 Safe PriorRes improves cross-dataset DG on average across multiple sources.
 Safe is more robust than Legacy across sources.
 Source-aligned dataset priors are necessary for stable gains.
-B2N performance is comparable on average and dataset-dependent.
 ```
 
 ---
@@ -617,7 +563,6 @@ Estimated completion:
 | Method implementation | 85% |
 | DG main experiments | 95% |
 | Safe prior ablation | 95% |
-| B2N auxiliary experiments | 90% |
 | In-domain auxiliary experiments | 80% |
 | Residual formulation analysis | 85% |
 | Mechanism analysis | 45% |
@@ -698,7 +643,6 @@ For strict reproducibility, task features should be extracted from the same trai
 
 ```text
 In-domain: use the 16-shot training split of the same dataset and seed.
-B2N: use only the base-class 16-shot training split.
 DG: use only the source dataset 16-shot training split; target features are not used in the strict DG setting.
 ```
 
@@ -709,7 +653,6 @@ outputs/task_features/<dataset>_shot16_seed<seed>_train.json
 outputs/task_features/<dataset>_base_shot16_seed<seed>_train.json
 ```
 
-This avoids using extra dataset statistics beyond the training split of each experimental protocol, especially for base-to-new generalization and cross-dataset DG.
 
 ---
 
