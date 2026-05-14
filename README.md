@@ -710,3 +710,21 @@ outputs/task_features/<dataset>_base_shot16_seed<seed>_train.json
 ```
 
 This avoids using extra dataset statistics beyond the training split of each experimental protocol, especially for base-to-new generalization and cross-dataset DG.
+
+---
+
+## Latest Result Updates
+
+### ImageNet-source Cross-Dataset DG
+
+In addition to the multi-source DG setting based on Caltech101, Food101, and SUN397, we further evaluate a standard large-source DG protocol using ImageNet as the source dataset.
+
+Setting:
+
+```text
+source = ImageNet
+targets = Caltech101, OxfordPets, DTD, EuroSAT, Food101, OxfordFlowers,
+          StanfordCars, FGVCAircraft, UCF101, SUN397
+backbone = RN50
+methods = CoOp vs Safe PriorRes
+seeds = 1, 2, 3
