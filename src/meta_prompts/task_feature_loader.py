@@ -11,7 +11,7 @@ FeatureMode = Literal["auto", "raw", "transformed", "normalized"]
 
 RAW_ORDER = ["C", "Ssemantic", "Dintra", "Dinter"]
 TRANSFORMED_ORDER = ["log_C", "Ssemantic", "log_Dintra", "log_Dinter"]
-NORMALIZED_ORDER = ["log_C", "Ssemantic", "log_Dintra", "log_Dinter"]
+NORMALIZED_ORDER = ["norm_log_C", "norm_Ssemantic", "norm_log_Dintra", "norm_log_Dinter"]
 
 
 @dataclass

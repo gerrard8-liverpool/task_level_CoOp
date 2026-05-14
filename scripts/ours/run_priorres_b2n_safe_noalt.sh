@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT=${ROOT:-/workspace/meta_prompt_1}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT=${ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}
 COOP_ROOT=${COOP_ROOT:-$ROOT/third_party/CoOp_clean}
 SRC_ROOT=${SRC_ROOT:-$ROOT/src}
-DATA_ROOT=${DATA_ROOT:-/workspace/datasets}
+DATA_ROOT=${DATA_ROOT:-$ROOT/datasets}
 
 DATASET=${1:?Usage: bash run_priorres_b2n_safe_noalt.sh <dataset> <seed> [shots] [nctx]}
 SEED=${2:?Usage: bash run_priorres_b2n_safe_noalt.sh <dataset> <seed> [shots] [nctx]}
@@ -19,7 +20,7 @@ TRAIN_CFG_TAG=${TRAIN_CFG_TAG:-rn50_ep50}
 LOAD_EPOCH=${LOAD_EPOCH:-50}
 
 DATASET_CFG=${DATASET_CFG:-$COOP_ROOT/configs/datasets/${DATASET}.yaml}
-FEATURE_JSON=${FEATURE_JSON:-$ROOT/outputs/task_features/${DATASET}_train.json}
+FEATURE_JSON=${FEATURE_JSON:-$ROOT/outputs/task_features/${DATASET}_base_shot${SHOTS}_seed${SEED}_train.json}
 
 COMMON="${DATASET}/shots_${SHOTS}/CoOpPriorRes/${TRAIN_CFG_TAG}/nctx${NCTX}_csc${CSC}_ctp${CTX_POS}_safe_noalt/seed${SEED}"
 TRAIN_DIR="$COOP_ROOT/output/base2new/train_base/${COMMON}"

@@ -287,7 +287,7 @@ Phase 1 currently contains the following completed experiment groups:
 The old Safe-only DG table is now deprecated. The current main DG table is:
 
 ```text
-results/dg_main/xd_multisource_coop_safe_legacy.md
+summary_tables/dg_main/xd_multisource_coop_safe_legacy.md
 ```
 
 ---

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT=${ROOT:-/workspace/meta_prompt_1}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT=${ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}
 COOP_ROOT=${COOP_ROOT:-$ROOT/third_party/CoOp_clean}
 SRC_ROOT=${SRC_ROOT:-$ROOT/src}
-DATA_ROOT=${DATA_ROOT:-/workspace/datasets}
+DATA_ROOT=${DATA_ROOT:-$ROOT/datasets}
 
 SOURCE=${1:?Usage: bash run_priorres_xd_legacy_noalt.sh <source_dataset> <seed> <target1> [target2 ...]}
 SEED=${2:?Usage: bash run_priorres_xd_legacy_noalt.sh <source_dataset> <seed> <target1> [target2 ...]}
@@ -26,7 +27,7 @@ TRAIN_CFG_TAG=${TRAIN_CFG_TAG:-rn50_ep50}
 LOAD_EPOCH=${LOAD_EPOCH:-50}
 
 SOURCE_CFG=${SOURCE_CFG:-$COOP_ROOT/configs/datasets/${SOURCE}.yaml}
-SOURCE_FEATURE_JSON=${SOURCE_FEATURE_JSON:-$ROOT/outputs/task_features/${SOURCE}_train.json}
+SOURCE_FEATURE_JSON=${SOURCE_FEATURE_JSON:-$ROOT/outputs/task_features/${SOURCE}_shot${SHOTS}_seed${SEED}_train.json}
 
 # DG strict setting:
 #   source = use source task feature during both source training and target evaluation
