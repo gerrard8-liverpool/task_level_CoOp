@@ -696,3 +696,24 @@ This would show that the method is not merely a CoOp-specific modification but a
 ## 18. One-Sentence Summary
 
 Safe PriorRes is an identity-centered dataset-prior residual prompt adapter that preserves CoOp-level behavior at initialization, improves cross-dataset transfer robustness across multiple source datasets, and shows through Real / Mean / Shuffle ablation that source-aligned dataset priors—not merely extra adapter parameters—are responsible for the main gains.
+
+---
+
+## 19. Feature Extraction Protocol
+
+For strict reproducibility, task features should be extracted from the same training protocol used by the corresponding experiment.
+
+```text
+In-domain: use the 16-shot training split of the same dataset and seed.
+B2N: use only the base-class 16-shot training split.
+DG: use only the source dataset 16-shot training split; target features are not used in the strict DG setting.
+```
+
+Recommended feature filenames:
+
+```text
+outputs/task_features/<dataset>_shot16_seed<seed>_train.json
+outputs/task_features/<dataset>_base_shot16_seed<seed>_train.json
+```
+
+This avoids using extra dataset statistics beyond the training split of each experimental protocol, especially for base-to-new generalization and cross-dataset DG.
