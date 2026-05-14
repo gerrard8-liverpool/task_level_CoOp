@@ -1,0 +1,391 @@
+***************
+** Arguments **
+***************
+backbone: 
+config_file: configs/trainers/CoCoOp/rn50_c4_ep10_batch1.yaml
+dataset_config_file: /workspace/meta_prompt_1/third_party/CoOp_clean/configs/datasets/eurosat.yaml
+eval_only: False
+head: 
+load_epoch: None
+model_dir: 
+no_train: False
+opts: ['DATASET.NUM_SHOTS', '16', 'DATASET.SUBSAMPLE_CLASSES', 'base', 'TRAINER.COCOOP.N_CTX', '4', 'TRAINER.COCOOP.CTX_INIT', 'a_photo_of_a', 'TRAINER.COOP.TASK_FEAT_PATH', '/workspace/meta_prompt_1/outputs/task_features_cocoop_b2n_base/rn50/eurosat_seed3_base_train.json', 'TRAINER.COOP.TASK_FEAT_MODE', 'transformed', 'TRAINER.COOP.META_HIDDEN_DIM', '64', 'TRAINER.COOP.META_KMAX', '16', 'TRAINER.COOP.GATE_TEMPERATURE', '1.0', 'TRAINER.COOP.INIT_GATE_BIAS', '4.0', 'TRAINER.COOP.USE_CONTEXT_GATING', 'True', 'TRAINER.COOP.USE_B', 'False', 'TRAINER.COOP.WARMUP_EPOCHS', '1', 'TRAINER.COOP.RAMP_EPOCHS', '3', 'TRAINER.COOP.LAMBDA_MAX', '0.5', 'TRAINER.COOP.META_LR_RATIO', '0.3', 'TRAINER.COOP.DELTA_A_REG', '1e-4', 'TRAINER.COOP.DELTA_B_REG', '1e-4']
+output_dir: /workspace/meta_prompt_1/third_party/CoOp_clean/output_cocoop_priorres/base2new/train_base/eurosat/shots_16/CoCoOpPriorRes/rn50_c4_ep10_batch1/nctx4_ctxinit_a_photo_of_a_safe_noalt_baseprior/seed3
+resume: 
+root: /workspace/datasets
+seed: 3
+source_domains: None
+target_domains: None
+trainer: CoCoOpPriorRes
+transforms: None
+************
+** Config **
+************
+DATALOADER:
+  K_TRANSFORMS: 1
+  NUM_WORKERS: 8
+  RETURN_IMG0: False
+  TEST:
+    BATCH_SIZE: 100
+    SAMPLER: SequentialSampler
+  TRAIN_U:
+    BATCH_SIZE: 32
+    N_DOMAIN: 0
+    N_INS: 16
+    SAME_AS_X: True
+    SAMPLER: RandomSampler
+  TRAIN_X:
+    BATCH_SIZE: 1
+    N_DOMAIN: 0
+    N_INS: 16
+    SAMPLER: RandomSampler
+DATASET:
+  ALL_AS_UNLABELED: False
+  CIFAR_C_LEVEL: 1
+  CIFAR_C_TYPE: 
+  NAME: EuroSAT
+  NUM_LABELED: -1
+  NUM_SHOTS: 16
+  ROOT: /workspace/datasets
+  SOURCE_DOMAINS: ()
+  STL10_FOLD: -1
+  SUBSAMPLE_CLASSES: base
+  TARGET_DOMAINS: ()
+  VAL_PERCENT: 0.1
+INPUT:
+  COLORJITTER_B: 0.4
+  COLORJITTER_C: 0.4
+  COLORJITTER_H: 0.1
+  COLORJITTER_S: 0.4
+  CROP_PADDING: 4
+  CUTOUT_LEN: 16
+  CUTOUT_N: 1
+  GB_K: 21
+  GB_P: 0.5
+  GN_MEAN: 0.0
+  GN_STD: 0.15
+  INTERPOLATION: bicubic
+  NO_TRANSFORM: False
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  RANDAUGMENT_M: 10
+  RANDAUGMENT_N: 2
+  RGS_P: 0.2
+  RRCROP_SCALE: (0.08, 1.0)
+  SIZE: (224, 224)
+  TRANSFORMS: ('random_resized_crop', 'random_flip', 'normalize')
+MODEL:
+  BACKBONE:
+    NAME: RN50
+    PRETRAINED: True
+  HEAD:
+    ACTIVATION: relu
+    BN: True
+    DROPOUT: 0.0
+    HIDDEN_LAYERS: ()
+    NAME: 
+  INIT_WEIGHTS: 
+OPTIM:
+  ADAM_BETA1: 0.9
+  ADAM_BETA2: 0.999
+  BASE_LR_MULT: 0.1
+  GAMMA: 0.1
+  LR: 0.002
+  LR_SCHEDULER: cosine
+  MAX_EPOCH: 10
+  MOMENTUM: 0.9
+  NAME: sgd
+  NEW_LAYERS: ()
+  RMSPROP_ALPHA: 0.99
+  SGD_DAMPNING: 0
+  SGD_NESTEROV: False
+  STAGED_LR: False
+  STEPSIZE: (-1,)
+  WARMUP_CONS_LR: 1e-05
+  WARMUP_EPOCH: 1
+  WARMUP_MIN_LR: 1e-05
+  WARMUP_RECOUNT: True
+  WARMUP_TYPE: constant
+  WEIGHT_DECAY: 0.0005
+OUTPUT_DIR: /workspace/meta_prompt_1/third_party/CoOp_clean/output_cocoop_priorres/base2new/train_base/eurosat/shots_16/CoCoOpPriorRes/rn50_c4_ep10_batch1/nctx4_ctxinit_a_photo_of_a_safe_noalt_baseprior/seed3
+RESUME: 
+SEED: 3
+TEST:
+  COMPUTE_CMAT: False
+  EVALUATOR: Classification
+  FINAL_MODEL: last_step
+  NO_TEST: False
+  PER_CLASS_RESULT: False
+  SPLIT: test
+TRAIN:
+  CHECKPOINT_FREQ: 0
+  COUNT_ITER: train_x
+  PRINT_FREQ: 20
+TRAINER:
+  CDAC:
+    CLASS_LR_MULTI: 10
+    P_THRESH: 0.95
+    RAMPUP_COEF: 30
+    RAMPUP_ITRS: 1000
+    STRONG_TRANSFORMS: ()
+    TOPK_MATCH: 5
+  COCOOP:
+    CTX_INIT: a_photo_of_a
+    N_CTX: 4
+    PREC: fp16
+  COOP:
+    ALTERNATE_OPT: True
+    APPEND_REGIME_FEATURE: True
+    B_LOSS_WEIGHT: 1.0
+    CLASS_TOKEN_POSITION: end
+    CSC: False
+    CTX_INIT: 
+    DELTA_A_REG: 0.0001
+    DELTA_B_REG: 0.0001
+    GATE_TEMPERATURE: 1.0
+    INIT_GATE_BIAS: 4.0
+    LAMBDA_MAX: 0.5
+    META_HIDDEN_DIM: 64
+    META_KMAX: 16
+    META_LR_RATIO: 0.3
+    N_CTX: 16
+    PREC: fp16
+    RAMP_EPOCHS: 3
+    TASK_FEAT_MODE: transformed
+    TASK_FEAT_PATH: /workspace/meta_prompt_1/outputs/task_features_cocoop_b2n_base/rn50/eurosat_seed3_base_train.json
+    USE_B: False
+    USE_CONTEXT_GATING: True
+    WARMUP_EPOCHS: 1
+  CROSSGRAD:
+    ALPHA_D: 0.5
+    ALPHA_F: 0.5
+    EPS_D: 1.0
+    EPS_F: 1.0
+  DAEL:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DAELDG:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 0.5
+  DDAIG:
+    ALPHA: 0.5
+    CLAMP: False
+    CLAMP_MAX: 1.0
+    CLAMP_MIN: -1.0
+    G_ARCH: 
+    LMDA: 0.3
+    WARMUP: 0
+  DOMAINMIX:
+    ALPHA: 1.0
+    BETA: 1.0
+    TYPE: crossdomain
+  ENTMIN:
+    LMDA: 0.001
+  FIXMATCH:
+    CONF_THRE: 0.95
+    STRONG_TRANSFORMS: ()
+    WEIGHT_U: 1.0
+  M3SDA:
+    LMDA: 0.5
+    N_STEP_F: 4
+  MCD:
+    N_STEP_F: 4
+  MEANTEACHER:
+    EMA_ALPHA: 0.999
+    RAMPUP: 5
+    WEIGHT_U: 1.0
+  MIXMATCH:
+    MIXUP_BETA: 0.75
+    RAMPUP: 20000
+    TEMP: 2.0
+    WEIGHT_U: 100.0
+  MME:
+    LMDA: 0.1
+  NAME: CoCoOpPriorRes
+  SE:
+    CONF_THRE: 0.95
+    EMA_ALPHA: 0.999
+    RAMPUP: 300
+USE_CUDA: True
+VERBOSE: True
+VERSION: 1
+Collecting env info ...
+** System info **
+PyTorch version: 2.2.0a0+81ea7a4
+Is debug build: False
+CUDA used to build PyTorch: 12.3
+ROCM used to build PyTorch: N/A
+
+OS: Ubuntu 22.04.3 LTS (x86_64)
+GCC version: (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+Clang version: Could not collect
+CMake version: version 3.27.9
+Libc version: glibc-2.35
+
+Python version: 3.10.12 (main, Nov 20 2023, 15:14:05) [GCC 11.4.0] (64-bit runtime)
+Python platform: Linux-6.8.0-111-generic-x86_64-with-glibc2.35
+Is CUDA available: True
+CUDA runtime version: 12.3.107
+CUDA_MODULE_LOADING set to: LAZY
+GPU models and configuration: 
+GPU 0: NVIDIA GeForce RTX 4090
+GPU 1: NVIDIA GeForce RTX 4090
+GPU 2: NVIDIA GeForce RTX 4090
+
+Nvidia driver version: 580.126.09
+cuDNN version: Probably one of the following:
+/usr/lib/x86_64-linux-gnu/libcudnn.so.8.9.7
+/usr/lib/x86_64-linux-gnu/libcudnn_adv_infer.so.8.9.7
+/usr/lib/x86_64-linux-gnu/libcudnn_adv_train.so.8.9.7
+/usr/lib/x86_64-linux-gnu/libcudnn_cnn_infer.so.8.9.7
+/usr/lib/x86_64-linux-gnu/libcudnn_cnn_train.so.8.9.7
+/usr/lib/x86_64-linux-gnu/libcudnn_ops_infer.so.8.9.7
+/usr/lib/x86_64-linux-gnu/libcudnn_ops_train.so.8.9.7
+HIP runtime version: N/A
+MIOpen runtime version: N/A
+Is XNNPACK available: True
+
+CPU:
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           46 bits physical, 57 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  64
+On-line CPU(s) list:                     0-63
+Vendor ID:                               GenuineIntel
+Model name:                              Intel(R) Xeon(R) Platinum 8336C CPU @ 2.30GHz
+CPU family:                              6
+Model:                                   106
+Thread(s) per core:                      2
+Core(s) per socket:                      32
+Socket(s):                               1
+Stepping:                                6
+CPU max MHz:                             3500.0000
+CPU min MHz:                             800.0000
+BogoMIPS:                                4600.00
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 intel_ppin ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect wbnoinvd dtherm ida arat pln pts hwp hwp_act_window hwp_epp hwp_pkg_req vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid fsrm md_clear pconfig flush_l1d arch_capabilities
+Virtualization:                          VT-x
+L1d cache:                               1.5 MiB (32 instances)
+L1i cache:                               1 MiB (32 instances)
+L2 cache:                                40 MiB (32 instances)
+L3 cache:                                54 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-63
+Vulnerability Gather data sampling:      Mitigation; Microcode
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+
+Versions of relevant libraries:
+[pip3] flake8==3.7.9
+[pip3] numpy==1.24.4
+[pip3] onnx==1.15.0rc2
+[pip3] optree==0.10.0
+[pip3] pytorch-quantization==2.1.2
+[pip3] torch==2.2.0a0+81ea7a4
+[pip3] torch-tensorrt==2.2.0a0
+[pip3] torchdata==0.7.0a0
+[pip3] torchtext==0.17.0a0
+[pip3] torchvision==0.17.0a0
+[pip3] triton==2.1.0+6e4932c
+[conda] Could not collect
+        Pillow (9.5.0)
+
+Loading trainer: CoCoOpPriorRes
+Loading dataset: EuroSAT
+Reading split from /workspace/datasets/eurosat/split_zhou_EuroSAT.json
+Loading preprocessed few-shot data from /workspace/datasets/eurosat/split_fewshot/shot_16-seed_3.pkl
+SUBSAMPLE BASE CLASSES!
+Building transform_train
++ random resized crop (size=(224, 224), scale=(0.08, 1.0))
++ random flip
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+Building transform_test
++ resize the smaller edge to 224
++ 224x224 center crop
++ to torch tensor of range [0, 1]
++ normalization (mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+---------  -------
+Dataset    EuroSAT
+# classes  5
+# train_x  80
+# val      20
+# test     4,200
+---------  -------
+Loading CLIP (backbone: RN50)
+Building custom CLIP: CoCoOp + Safe PriorRes
+Initial context: "a photo of a"
+Number of context words (tokens): 4
+[CoCoOpPriorRes] residual modulation mode = identity-centered:(a-a0)
+Turning off gradients in image encoder and text encoder
+Loading evaluator: Classification
+No checkpoint found, train from scratch
+Initialize tensorboard (log_dir=/workspace/meta_prompt_1/third_party/CoOp_clean/output_cocoop_priorres/base2new/train_base/eurosat/shots_16/CoCoOpPriorRes/rn50_c4_ep10_batch1/nctx4_ctxinit_a_photo_of_a_safe_noalt_baseprior/seed3/tensorboard)
+epoch [1/10] batch [20/80] time 0.061 (0.140) data 0.000 (0.018) loss 1.7666 (1.4706) acc 0.0000 (20.0000) loss_cls 1.7666 (1.4706) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.0000 (0.0000) meff 3.9054 (3.9054) keff 13.2949 (13.2949) a0_mean 0.9764 (0.9764) a_mean 0.9764 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6869 (2.6869) top1_weight 0.1513 (0.1513) top4_weight_sum 0.3997 (0.3997) lr 1.0000e-05 eta 0:01:49
+epoch [1/10] batch [40/80] time 0.058 (0.100) data 0.000 (0.009) loss 1.6416 (1.4869) acc 0.0000 (17.5000) loss_cls 1.6416 (1.4869) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.0000 (0.0000) meff 3.9054 (3.9054) keff 13.2949 (13.2949) a0_mean 0.9764 (0.9764) a_mean 0.9764 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6869 (2.6869) top1_weight 0.1513 (0.1513) top4_weight_sum 0.3997 (0.3997) lr 1.0000e-05 eta 0:01:16
+epoch [1/10] batch [60/80] time 0.061 (0.087) data 0.000 (0.006) loss 1.6094 (1.4943) acc 0.0000 (18.3333) loss_cls 1.6094 (1.4943) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.0000 (0.0000) meff 3.9054 (3.9054) keff 13.2949 (13.2949) a0_mean 0.9764 (0.9764) a_mean 0.9764 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6869 (2.6869) top1_weight 0.1513 (0.1513) top4_weight_sum 0.3997 (0.3997) lr 1.0000e-05 eta 0:01:04
+epoch [1/10] batch [80/80] time 0.059 (0.080) data 0.000 (0.005) loss 0.9395 (1.4754) acc 100.0000 (22.5000) loss_cls 0.9395 (1.4754) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.0000 (0.0000) meff 3.9054 (3.9054) keff 13.2949 (13.2949) a0_mean 0.9764 (0.9764) a_mean 0.9764 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6869 (2.6869) top1_weight 0.1513 (0.1513) top4_weight_sum 0.3997 (0.3997) lr 2.0000e-03 eta 0:00:57
+epoch [2/10] batch [20/80] time 0.062 (0.083) data 0.000 (0.017) loss 2.2207 (1.5204) acc 0.0000 (15.0000) loss_cls 2.2207 (1.5204) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.1667 (0.1667) meff 3.9054 (3.9054) keff 13.2954 (13.2951) a0_mean 0.9764 (0.9764) a_mean 0.9764 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6869 (2.6869) top1_weight 0.1512 (0.1513) top4_weight_sum 0.3997 (0.3997) lr 2.0000e-03 eta 0:00:57
+epoch [2/10] batch [40/80] time 0.063 (0.072) data 0.000 (0.009) loss 1.0508 (1.3472) acc 0.0000 (32.5000) loss_cls 1.0508 (1.3472) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.1667 (0.1667) meff 3.9054 (3.9054) keff 13.2961 (13.2954) a0_mean 0.9764 (0.9764) a_mean 0.9764 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6869 (2.6869) top1_weight 0.1512 (0.1512) top4_weight_sum 0.3997 (0.3997) lr 2.0000e-03 eta 0:00:49
+epoch [2/10] batch [60/80] time 0.061 (0.069) data 0.000 (0.006) loss 0.2043 (1.2550) acc 100.0000 (41.6667) loss_cls 0.2043 (1.2550) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.1667 (0.1667) meff 3.9054 (3.9054) keff 13.2966 (13.2957) a0_mean 0.9764 (0.9764) a_mean 0.9764 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6870 (2.6869) top1_weight 0.1512 (0.1512) top4_weight_sum 0.3997 (0.3997) lr 2.0000e-03 eta 0:00:45
+epoch [2/10] batch [80/80] time 0.060 (0.066) data 0.000 (0.005) loss 0.3936 (1.1938) acc 100.0000 (45.0000) loss_cls 0.3936 (1.1938) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.1667 (0.1667) meff 3.9054 (3.9054) keff 13.2971 (13.2960) a0_mean 0.9763 (0.9764) a_mean 0.9763 (0.9764) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6870 (2.6869) top1_weight 0.1512 (0.1512) top4_weight_sum 0.3997 (0.3997) lr 1.9511e-03 eta 0:00:42
+epoch [3/10] batch [20/80] time 0.060 (0.081) data 0.000 (0.018) loss 1.7139 (0.9724) acc 0.0000 (65.0000) loss_cls 1.7139 (0.9724) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.3333 (0.3333) meff 3.9054 (3.9054) keff 13.2976 (13.2973) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6870 (2.6870) top1_weight 0.1512 (0.1512) top4_weight_sum 0.3996 (0.3996) lr 1.9511e-03 eta 0:00:50
+epoch [3/10] batch [40/80] time 0.059 (0.072) data 0.000 (0.009) loss 1.0430 (0.8098) acc 0.0000 (67.5000) loss_cls 1.0430 (0.8098) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.3333 (0.3333) meff 3.9053 (3.9054) keff 13.2982 (13.2976) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6870 (2.6870) top1_weight 0.1512 (0.1512) top4_weight_sum 0.3996 (0.3996) lr 1.9511e-03 eta 0:00:42
+epoch [3/10] batch [60/80] time 0.064 (0.068) data 0.001 (0.006) loss 0.2634 (0.8252) acc 100.0000 (66.6667) loss_cls 0.2634 (0.8252) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.3333 (0.3333) meff 3.9053 (3.9054) keff 13.2988 (13.2979) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6870 (2.6870) top1_weight 0.1512 (0.1512) top4_weight_sum 0.3996 (0.3996) lr 1.9511e-03 eta 0:00:39
+epoch [3/10] batch [80/80] time 0.057 (0.066) data 0.001 (0.005) loss 0.2896 (0.7898) acc 100.0000 (68.7500) loss_cls 0.2896 (0.7898) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.3333 (0.3333) meff 3.9053 (3.9053) keff 13.2995 (13.2982) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6871 (2.6870) top1_weight 0.1512 (0.1512) top4_weight_sum 0.3996 (0.3996) lr 1.8090e-03 eta 0:00:36
+epoch [4/10] batch [20/80] time 0.060 (0.083) data 0.000 (0.020) loss 1.4121 (0.7496) acc 0.0000 (80.0000) loss_cls 1.4121 (0.7496) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9053 (3.9053) keff 13.3001 (13.2999) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6871 (2.6871) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3996 (0.3996) lr 1.8090e-03 eta 0:00:45
+epoch [4/10] batch [40/80] time 0.064 (0.073) data 0.000 (0.010) loss 0.1946 (0.6747) acc 100.0000 (80.0000) loss_cls 0.1946 (0.6747) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9053 (3.9053) keff 13.3005 (13.3001) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6871 (2.6871) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3995 (0.3996) lr 1.8090e-03 eta 0:00:37
+epoch [4/10] batch [60/80] time 0.062 (0.070) data 0.000 (0.007) loss 1.4062 (0.7010) acc 0.0000 (76.6667) loss_cls 1.4062 (0.7010) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9052 (3.9053) keff 13.3011 (13.3003) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6871 (2.6871) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3995 (0.3995) lr 1.8090e-03 eta 0:00:34
+epoch [4/10] batch [80/80] time 0.057 (0.067) data 0.000 (0.005) loss 0.1949 (0.6974) acc 100.0000 (76.2500) loss_cls 0.1949 (0.6974) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9052 (3.9053) keff 13.3018 (13.3006) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6871 (2.6871) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3995 (0.3995) lr 1.5878e-03 eta 0:00:32
+epoch [5/10] batch [20/80] time 0.060 (0.082) data 0.000 (0.019) loss 1.3711 (0.5028) acc 0.0000 (85.0000) loss_cls 1.3711 (0.5028) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9052 (3.9052) keff 13.3025 (13.3022) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6871) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3995 (0.3995) lr 1.5878e-03 eta 0:00:37
+epoch [5/10] batch [40/80] time 0.062 (0.072) data 0.001 (0.010) loss 0.4299 (0.4584) acc 100.0000 (87.5000) loss_cls 0.4299 (0.4584) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9052 (3.9052) keff 13.3028 (13.3024) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3995 (0.3995) lr 1.5878e-03 eta 0:00:31
+epoch [5/10] batch [60/80] time 0.060 (0.069) data 0.000 (0.007) loss 0.3040 (0.4243) acc 100.0000 (86.6667) loss_cls 0.3040 (0.4243) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9052 (3.9052) keff 13.3031 (13.3026) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3995 (0.3995) lr 1.5878e-03 eta 0:00:28
+epoch [5/10] batch [80/80] time 0.060 (0.066) data 0.000 (0.005) loss 0.0690 (0.5161) acc 100.0000 (82.5000) loss_cls 0.0690 (0.5161) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9052 (3.9052) keff 13.3035 (13.3028) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3994 (0.3995) lr 1.3090e-03 eta 0:00:26
+epoch [6/10] batch [20/80] time 0.063 (0.083) data 0.000 (0.020) loss 1.2490 (0.5077) acc 100.0000 (90.0000) loss_cls 1.2490 (0.5077) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9052 (3.9052) keff 13.3038 (13.3037) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3994 (0.3994) lr 1.3090e-03 eta 0:00:31
+epoch [6/10] batch [40/80] time 0.066 (0.073) data 0.000 (0.010) loss 0.1045 (0.4772) acc 100.0000 (87.5000) loss_cls 0.1045 (0.4772) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9052) keff 13.3040 (13.3038) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1511 (0.1511) top4_weight_sum 0.3994 (0.3994) lr 1.3090e-03 eta 0:00:26
+epoch [6/10] batch [60/80] time 0.066 (0.069) data 0.000 (0.007) loss 0.1974 (0.5369) acc 100.0000 (85.0000) loss_cls 0.1974 (0.5369) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3044 (13.3039) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1510 (0.1511) top4_weight_sum 0.3994 (0.3994) lr 1.3090e-03 eta 0:00:23
+epoch [6/10] batch [80/80] time 0.058 (0.067) data 0.000 (0.005) loss 0.1427 (0.5193) acc 100.0000 (81.2500) loss_cls 0.1427 (0.5193) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3048 (13.3041) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1510 (0.1511) top4_weight_sum 0.3994 (0.3994) lr 1.0000e-03 eta 0:00:21
+epoch [7/10] batch [20/80] time 0.063 (0.082) data 0.000 (0.020) loss 1.6992 (0.5051) acc 0.0000 (85.0000) loss_cls 1.6992 (0.5051) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3051 (13.3050) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6872 (2.6872) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3994 (0.3994) lr 1.0000e-03 eta 0:00:24
+epoch [7/10] batch [40/80] time 0.061 (0.073) data 0.000 (0.010) loss 1.3291 (0.4634) acc 0.0000 (85.0000) loss_cls 1.3291 (0.4634) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3053 (13.3051) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6872) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3994 (0.3994) lr 1.0000e-03 eta 0:00:20
+epoch [7/10] batch [60/80] time 0.067 (0.070) data 0.000 (0.007) loss 0.1702 (0.4840) acc 100.0000 (80.0000) loss_cls 0.1702 (0.4840) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3056 (13.3052) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3994 (0.3994) lr 1.0000e-03 eta 0:00:18
+epoch [7/10] batch [80/80] time 0.057 (0.067) data 0.000 (0.005) loss 0.0032 (0.4430) acc 100.0000 (82.5000) loss_cls 0.0032 (0.4430) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3059 (13.3054) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3994 (0.3994) lr 6.9098e-04 eta 0:00:16
+epoch [8/10] batch [20/80] time 0.061 (0.085) data 0.000 (0.020) loss 0.1383 (0.4654) acc 100.0000 (80.0000) loss_cls 0.1383 (0.4654) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3060 (13.3059) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3994 (0.3994) lr 6.9098e-04 eta 0:00:18
+epoch [8/10] batch [40/80] time 0.059 (0.074) data 0.000 (0.010) loss 0.5542 (0.4445) acc 100.0000 (82.5000) loss_cls 0.5542 (0.4445) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3063 (13.3061) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3994 (0.3994) lr 6.9098e-04 eta 0:00:14
+epoch [8/10] batch [60/80] time 0.066 (0.070) data 0.000 (0.007) loss 0.0494 (0.4314) acc 100.0000 (85.0000) loss_cls 0.0494 (0.4314) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3065 (13.3062) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3994) lr 6.9098e-04 eta 0:00:12
+epoch [8/10] batch [80/80] time 0.058 (0.067) data 0.000 (0.005) loss 0.0809 (0.4673) acc 100.0000 (85.0000) loss_cls 0.0809 (0.4673) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9051 (3.9051) keff 13.3067 (13.3063) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3994) lr 4.1221e-04 eta 0:00:10
+epoch [9/10] batch [20/80] time 0.060 (0.083) data 0.001 (0.020) loss 0.3030 (0.5512) acc 100.0000 (85.0000) loss_cls 0.3030 (0.5512) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3069 (13.3068) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 4.1221e-04 eta 0:00:11
+epoch [9/10] batch [40/80] time 0.062 (0.073) data 0.000 (0.010) loss 0.0674 (0.4444) acc 100.0000 (87.5000) loss_cls 0.0674 (0.4444) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3070 (13.3069) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 4.1221e-04 eta 0:00:08
+epoch [9/10] batch [60/80] time 0.059 (0.070) data 0.001 (0.007) loss 0.0032 (0.3941) acc 100.0000 (90.0000) loss_cls 0.0032 (0.3941) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3072 (13.3069) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 4.1221e-04 eta 0:00:06
+epoch [9/10] batch [80/80] time 0.060 (0.067) data 0.000 (0.005) loss 0.2068 (0.3844) acc 100.0000 (87.5000) loss_cls 0.2068 (0.3844) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3073 (13.3070) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 1.9098e-04 eta 0:00:05
+epoch [10/10] batch [20/80] time 0.061 (0.082) data 0.000 (0.020) loss 0.1604 (0.5252) acc 100.0000 (80.0000) loss_cls 0.1604 (0.5252) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3073 (13.3073) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 1.9098e-04 eta 0:00:04
+epoch [10/10] batch [40/80] time 0.061 (0.072) data 0.000 (0.010) loss 0.2100 (0.4003) acc 100.0000 (85.0000) loss_cls 0.2100 (0.4003) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3074 (13.3073) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 1.9098e-04 eta 0:00:02
+epoch [10/10] batch [60/80] time 0.062 (0.069) data 0.000 (0.007) loss 0.0531 (0.3241) acc 100.0000 (90.0000) loss_cls 0.0531 (0.3241) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3074 (13.3074) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 1.9098e-04 eta 0:00:01
+epoch [10/10] batch [80/80] time 0.057 (0.066) data 0.000 (0.005) loss 0.0705 (0.3132) acc 100.0000 (91.2500) loss_cls 0.0705 (0.3132) reg_a 0.0000 (0.0000) reg_b 0.0000 (0.0000) lambda_t 0.5000 (0.5000) meff 3.9050 (3.9050) keff 13.3075 (13.3074) a0_mean 0.9763 (0.9763) a_mean 0.9763 (0.9763) b0_mean 0.9791 (0.9791) b_mean 0.9791 (0.9791) delta_a_norm 0.0000 (0.0000) delta_b_norm 0.0000 (0.0000) b_entropy 2.6873 (2.6873) top1_weight 0.1510 (0.1510) top4_weight_sum 0.3993 (0.3993) lr 4.8943e-05 eta 0:00:00
+Checkpoint saved to /workspace/meta_prompt_1/third_party/CoOp_clean/output_cocoop_priorres/base2new/train_base/eurosat/shots_16/CoCoOpPriorRes/rn50_c4_ep10_batch1/nctx4_ctxinit_a_photo_of_a_safe_noalt_baseprior/seed3/prompt_learner/model.pth.tar-10
+Checkpoint saved to /workspace/meta_prompt_1/third_party/CoOp_clean/output_cocoop_priorres/base2new/train_base/eurosat/shots_16/CoCoOpPriorRes/rn50_c4_ep10_batch1/nctx4_ctxinit_a_photo_of_a_safe_noalt_baseprior/seed3/prior_adapter/model.pth.tar-10
+Finish training
+Deploy the last-epoch model
+Evaluate on the *test* set
+=> result
+* total: 4,200
+* correct: 3,766
+* accuracy: 89.7%
+* error: 10.3%
+* macro_f1: 89.8%
+Elapsed: 0:01:28
