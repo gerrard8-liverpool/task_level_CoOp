@@ -119,13 +119,13 @@ The dataset feature is fed into a lightweight adapter to generate a dataset-cond
 a0 = f_theta(z_D)
 ```
 
-During training, the model learns a deviation from this initial prior:
+During training, the model learns a logit-space deviation from this initial prior:
 
 ```text
-a = a0 + delta_a
+a = sigmoid(logit(a0) + delta_a)
 ```
 
-The adapter modulates the original CoOp context tokens through a residual direction.
+This keeps the gate bounded while preserving `a = a0` at initialization. The adapter then modulates the original CoOp context tokens through a residual direction.
 
 ---
 
