@@ -490,37 +490,27 @@ The current paper should follow this logic:
 
 ### Step 1: Problem
 
-CoOp-style prompt learning does not explicitly use dataset-level distributional priors.
+CoOp-style prompt learning does not explicitly use dataset-level distributional priors during source-domain training.
 
 ### Step 2: Method
 
-Introduce dataset-prior residual prompt adaptation.
+Introduce Safe PriorRes, an identity-centered dataset-prior residual prompt adapter.
 
-### Step 3: Safety
+### Step 3: Residual Safety
 
-Naive residual injection is not identity-preserving. Safe PriorRes starts from vanilla CoOp and learns residual deviations gradually.
+Naive residual injection can convert dataset-conditioned priors into harmful non-identity prompt bias. Safe PriorRes centers the residual around the dataset-conditioned initialization and suppresses harmful prompt shift.
 
-### Step 4: Main empirical evidence
+### Step 4: Main Empirical Evidence
 
-Cross-dataset DG shows Safe PriorRes is robust across sources:
+The primary DG result is the ImageNet-source cross-dataset benchmark. Safe PriorRes obtains +1.10 average delta over CoOp, with positive gains on 9/10 targets and 17/30 positive seed-level cases.
 
-```text
-Safe overall:   +1.28
-Legacy overall: -0.82
-```
+### Step 5: Source-target Dependency
 
-### Step 5: Prior validity
+The clean 4-source rerun is used as source-dependency and residual-formulation analysis. It shows that transfer behavior is not universally positive but depends strongly on source-target pairs.
 
-Safe-Real beats Safe-Mean and Safe-Shuffle:
+### Step 6: Prior Distribution Quality
 
-```text
-Safe-Real:    +1.28
-Safe-Mean:    -0.03
-Safe-Shuffle: -0.53
-```
-
-### Step 6: Auxiliary generalization
-
+The ImageNet-feature sanity check shows that dataset features act as train-time distributional conditioning signals. The effectiveness of a prior is source-dependent: Caltech101 and Food101 benefit from the broader ImageNet prior, OxfordPets is nearly neutral, and SUN397 prefers its own source feature.
 
 ---
 
@@ -529,17 +519,19 @@ Safe-Shuffle: -0.53
 Do not claim:
 
 ```text
-Safe PriorRes always improves in-domain accuracy.
-Legacy is always worse than Safe.
-Dataset prior always helps regardless of source-target relation.
+Safe PriorRes universally improves every DG pair.
+ImageNet feature is always better than the source feature.
+Source-aligned features are always optimal.
+Mean / Shuffle controls are the final proof of prior validity.
 ```
 
 Correct claims:
 
 ```text
-Safe PriorRes improves cross-dataset DG on average across multiple sources.
-Safe is more robust than Legacy across sources.
-Source-aligned dataset priors are necessary for stable gains.
+Safe PriorRes provides an identity-centered residual interface for safe dataset-prior injection.
+ImageNet-source DG is the primary empirical evidence.
+Prior features act as train-time distributional conditioning signals.
+Prior quality is source-dependent and should be evaluated by downstream DG behavior.
 ```
 
 ---
@@ -550,22 +542,20 @@ Estimated completion:
 
 | Module | Completion |
 |---|---:|
-| Method implementation | 85% |
-| DG main experiments | 95% |
-| Safe prior ablation | 95% |
+| Method implementation | 90% |
+| ImageNet-source DG main table | 100% |
+| Clean 4-source DG analysis | 100% |
+| Prior distribution quality analysis | 100% |
+| Residual safety mechanism figures | 90% |
 | In-domain auxiliary experiments | 80% |
-| Residual formulation analysis | 85% |
-| Mechanism analysis | 45% |
-| Paper writing | 35% |
-| Universal adapter extension | 25% |
-| ImageNet scaling | optional |
+| CoCoOp ImageNet-source DG | pending |
+| Paper writing | 45% |
 
 Overall status:
 
 ```text
-Phase 1 core experiments: completed.
-Preprint readiness: around 80%.
-Main-conference readiness: around 60%–65%.
+Phase 1 CoOp-based package: mostly complete.
+The remaining key extension is CoCoOp ImageNet-source DG.
 ```
 
 ---
@@ -575,55 +565,40 @@ Main-conference readiness: around 60%–65%.
 Current version:
 
 ```text
-Strong arXiv / workshop / CCF C potential.
-CCF B becomes realistic with strong writing and mechanism analysis.
-AAAI / IJCAI / ACM MM is possible but still needs stronger generality evidence.
+Strong technical report / arXiv potential.
+Neurocomputing is realistic if the paper is written cleanly.
+Pattern Recognition is possible with stronger writing, mechanism analysis, and CoCoOp extension.
+AAAI remains a high-risk target unless CoCoOp or another prompt learner confirms method generality.
 ```
-
-To improve main-conference potential, the next most important step is:
-
-```text
-CoCoOp / CoCoOpS adapter generality.
-```
-
-This would show that the method is not merely a CoOp-specific modification but a general dataset-prior prompt adapter.
 
 ---
 
 ## 17. Recommended Next Steps
 
-### Immediate
+Immediate:
 
 ```text
-1. Keep the current Phase 1 package as the clean result archive.
-2. Start writing the method and experiment sections.
-3. Turn DG and prior ablation tables into paper-ready tables.
-4. Organize mechanism logs into a compact analysis table or figure.
+1. Finalize README and paper assets.
+2. Use ImageNet-source DG as the main table.
+3. Use clean 4-source rerun for source-target dependency.
+4. Use prior distribution quality analysis instead of old Mean / Shuffle ablation as the main prior evidence.
+5. Start paper drafting.
 ```
 
-### Next experimental stage
+Next experimental stage:
 
 ```text
-1. Implement CoCoOp / CoCoOpS adapter version.
-2. Test whether dataset-prior residual adaptation generalizes beyond CoOp.
-3. Add mechanism plots if time allows.
-4. Consider source-target feature distance analysis.
-```
-
-### Optional
-
-```text
-1. ImageNet-source DG scaling.
-2. RandomFixed prior appendix baseline.
-3. Additional shuffle mappings.
-4. More complete in-domain table cleanup.
+1. Run CoCoOp ImageNet-source DG.
+2. Check whether the residual-safety idea generalizes beyond CoOp.
+3. Add compact mechanism figures and final paper tables.
 ```
 
 ---
 
 ## 18. One-Sentence Summary
 
-Safe PriorRes is an identity-centered dataset-prior residual prompt adapter that preserves CoOp-level behavior at initialization, improves cross-dataset transfer robustness across multiple source datasets, and shows through Real / Mean / Shuffle ablation that source-aligned dataset priors—not merely extra adapter parameters—are responsible for the main gains.
+Safe PriorRes is an identity-centered dataset-prior residual prompt adapter for CLIP prompt learning. Its main value is safe train-time distributional conditioning: dataset-level features influence the learned DG solution, but the quality of the prior is source-dependent rather than universally determined by source alignment.
+
 
 ---
 
