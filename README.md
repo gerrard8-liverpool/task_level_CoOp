@@ -298,7 +298,7 @@ The primary DG result should be the ImageNet-source cross-dataset result:
 summary_tables/dg_main/imagenet_source_dg.md
 ```
 
-This table should be treated as the main empirical result because ImageNet is the standard large-scale source domain for cross-dataset generalization.
+This table is the current primary CoOp-based DG result. In the ImageNet-source setting, Safe PriorRes obtains an average delta of +1.10 over CoOp, with positive target-level gains on 9/10 datasets and 17/30 positive seed-level cases.
 
 ### 7.3 Auxiliary Analysis Table: Clean 4-source DG Rerun
 
@@ -336,71 +336,61 @@ Safe PriorRes should not be described as a universal DG accuracy booster. Its ma
 
 ---
 
-## 8. Safe Dataset-Prior Ablation
+## 8. Prior Distribution Quality Analysis
 
 ### 8.1 Purpose
 
-This ablation answers the key reviewer question:
+This analysis answers a more precise reviewer question:
 
 ```text
-Does the gain come from meaningful dataset priors, or merely from adding residual adapter parameters?
+Does the injected dataset feature act as a train-time distributional conditioning signal that changes the learned DG solution?
 ```
 
-Compared variants:
+The key point is that task features should not be interpreted as direct test-time target-domain queries. They are injected during source training and interact with the source data to shape the learned prompt solution.
 
-| Variant | Description |
-|---|---|
-| Safe-Real | uses the true source dataset feature |
-| Safe-Mean | uses a global averaged dataset feature |
-| Safe-Shuffle | uses a fixed mismatched dataset feature |
+### 8.2 ImageNet Feature Sanity Check
 
-Shuffle mapping:
+To test the role of prior distribution quality, we keep the training source fixed and replace only the training-time prior feature with the ImageNet feature.
 
 ```text
-caltech101 source -> food101 feature
-food101 source    -> sun397 feature
-sun397 source     -> caltech101 feature
+Training source: fixed
+Model/training protocol: unchanged
+Changed variable: prior feature used during training
+Comparison: Safe-RealSourceFeat vs Safe-ImageNetFeat
 ```
 
-### 8.2 Source-Level Summary
+### 8.3 Four-source RN50 Summary
 
-| Source | Real-CoOp | Mean-CoOp | Shuffle-CoOp | Real-Mean | Real-Shuffle |
-|---|---:|---:|---:|---:|---:|
-| Caltech101 | +1.43 | +1.10 | +1.10 | +0.33 | +0.33 |
-| Food101 | +2.21 | +1.57 | +1.29 | +0.63 | +0.92 |
-| SUN397 | +0.20 | -2.76 | -3.97 | +2.96 | +4.17 |
-| **Overall** | **+1.28** | **-0.03** | **-0.53** | **+1.31** | **+1.81** |
+| Source | Safe-Real - CoOp | Safe-ImageNetFeat - CoOp | ImageNetFeat - Real |
+|---|---:|---:|---:|
+| Caltech101 | +0.70 | +1.25 | +0.56 |
+| Food101 | -0.47 | +0.04 | +0.52 |
+| SUN397 | +1.12 | -0.06 | -1.17 |
+| OxfordPets | +1.99 | +1.96 | -0.03 |
+| **Overall** | **+0.83** | **+0.80** | **-0.03** |
 
-### 8.3 Interpretation
+### 8.4 Interpretation
 
-The ablation gives a clean conclusion:
+This result should not be interpreted as ImageNet feature being universally better. Instead, it shows that different prior features produce different DG solutions under the same source training protocol.
+
+Caltech101 and Food101 benefit from the broader ImageNet prior. OxfordPets is nearly neutral. SUN397 prefers its own source feature. Therefore, prior usefulness is source-dependent.
+
+The correct conclusion is:
 
 ```text
-Safe-Real > Safe-Mean > Safe-Shuffle on average.
+Dataset-level features act as train-time distributional conditioning signals.
+Their value is determined by source-prior compatibility and downstream DG behavior.
+The source-aligned feature is not always optimal, and the ImageNet feature is not universally optimal either.
 ```
 
-Therefore:
+### 8.5 Status of Old Mean / Shuffle Controls
 
-```text
-The improvement is not mainly caused by adding a residual adapter.
-The source-aligned dataset prior is necessary.
-Mismatched priors can introduce negative transfer.
-```
+The old Mean / Shuffle controls are retained only as diagnostic experiments. They should not be used as the final proof of prior validity, because Mean and Shuffle features may contain real benchmark-domain or target-domain statistics.
 
-The strongest evidence appears for SUN397:
+The cleaner paper-level ablation is the prior-distribution quality analysis above.
 
-```text
-Safe-Real:    +0.20
-Safe-Mean:    -2.76
-Safe-Shuffle: -3.97
-Real-Mean:    +2.96
-Real-Shuffle: +4.17
-```
-
-This means that for a scene-centric source such as SUN397, the real source prior mainly helps by preventing negative transfer caused by generic or mismatched priors.
 
 ---
-
 
 ## 10. In-Domain Few-Shot Classification
 
