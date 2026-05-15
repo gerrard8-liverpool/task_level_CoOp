@@ -1,0 +1,5 @@
+source,real_minus_coop,img_minus_coop,img_minus_real
+Caltech101,0.7,1.25,0.56
+Food101,-0.47,0.04,0.52
+SUN397,1.12,-0.06,-1.17
+OxfordPets,1.99,1.95,-0.04

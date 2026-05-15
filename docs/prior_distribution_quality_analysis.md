@@ -39,3 +39,34 @@ Use this analysis as prior-distribution quality evidence. Do not use the old Mea
 Recommended claim:
 
 Dataset-level priors affect the learned DG solution through train-time conditioning. Their effectiveness is source-dependent and should be evaluated by downstream DG behavior rather than by assuming that the source-aligned feature is always optimal.
+
+## Recommended Figures
+
+The following figures visualize how the training source and injected prior feature jointly shape the final DG behavior.
+
+### Figure: Source-Prior Interaction
+
+```text
+paper_assets/figures/fig_prior_source_interaction.pdf
+paper_assets/figures/fig_prior_source_interaction.png
+```
+
+This figure compares Safe-RealSourceFeat and Safe-ImageNetFeat under each fixed training source. It shows that the effect of replacing the prior feature is source-dependent: ImageNet feature improves Caltech101 and Food101, is nearly neutral on OxfordPets, and hurts SUN397.
+
+### Figure: Target-Level Transfer Difference
+
+```text
+paper_assets/figures/fig_prior_target_heatmap_imgfeat_minus_real.pdf
+paper_assets/figures/fig_prior_target_heatmap_imgfeat_minus_real.png
+```
+
+This heatmap visualizes ImageNetFeat - RealSourceFeat for each source-target pair. It shows that changing the prior feature changes the target transfer pattern, supporting the interpretation that dataset features act as train-time distributional conditioning signals.
+
+### Figure: Positive Case Counts
+
+```text
+paper_assets/figures/fig_prior_positive_case_counts.pdf
+paper_assets/figures/fig_prior_positive_case_counts.png
+```
+
+This figure summarizes seed-level positive cases for Safe-Real, Safe-ImageNetFeat, and ImageNetFeat over RealSourceFeat. It should be used as auxiliary evidence, not as the main mechanism figure.
