@@ -28,7 +28,7 @@ TARGETS=(
   sun397
 )
 
-FEATURE_JSON="$PROJECT_ROOT/outputs/task_features/imagenet_train_sample32.json"
+FEATURE_JSON="$PROJECT_ROOT/assets/task_features/imagenet_train_sample32.json"
 
 if [ ! -f "$FEATURE_JSON" ]; then
   echo "[ERROR] Missing ImageNet task feature: $FEATURE_JSON"

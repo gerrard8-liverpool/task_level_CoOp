@@ -30,7 +30,7 @@ TARGETS=(
 
 TRAIN_CFG="configs/trainers/CoCoOp/rn50_c4_ep10_batch4_a100.yaml"
 TRAIN_CFG_TAG="rn50_c4_ep10_batch4_a100"
-FEATURE_JSON="$PROJECT_ROOT/outputs/task_features/imagenet_train_sample32.json"
+FEATURE_JSON="$PROJECT_ROOT/assets/task_features/imagenet_train_sample32.json"
 
 if [ ! -f "$FEATURE_JSON" ]; then
   echo "[ERROR] Missing ImageNet source feature: $FEATURE_JSON"

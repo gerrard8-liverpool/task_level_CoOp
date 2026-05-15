@@ -16,7 +16,7 @@ LOAD_EPOCH=${LOAD_EPOCH:-10}
 SHOTS=${SHOTS:-16}
 NCTX=${NCTX:-4}
 
-FEATURE_JSON=${SOURCE_FEATURE_JSON:-$PROJECT_ROOT/outputs/task_features/imagenet_train_sample32.json}
+FEATURE_JSON=${SOURCE_FEATURE_JSON:-$PROJECT_ROOT/assets/task_features/imagenet_train_sample32.json}
 
 TARGETS=(
   caltech101

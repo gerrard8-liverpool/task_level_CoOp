@@ -104,7 +104,7 @@ This file is used by the **Safe-Mean** prior ablation.
 For ImageNet, a sampled feature file may be used:
 
 ```text
-outputs/task_features/imagenet_train_sample32.json
+assets/task_features/imagenet_train_sample32.json
 ```
 
 ImageNet is currently treated as optional scaling and should not block the main paper.
